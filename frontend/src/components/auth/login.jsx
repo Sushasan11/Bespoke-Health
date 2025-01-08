@@ -20,9 +20,9 @@ function Login() {
 
       // Check if the user is a doctor or a patient based on the email format
       if (email.endsWith(".doctor@gmail.com")) {
-        navigate("/doctor/dashboard"); // Navigate to the doctor dashboard
+        navigate("/doctor/dashboard"); 
       } else {
-        navigate("/patient/dashboard"); // Navigate to the patient dashboard
+        navigate("/patient/dashboard"); 
       }
     } catch (error) {
       if (error.response) {

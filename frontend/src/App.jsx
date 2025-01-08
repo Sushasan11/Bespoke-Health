@@ -9,7 +9,7 @@ import Home from "./views/Home";
 import Login from "./components/auth/login";
 import SignupPatient from "./components/auth/signupPatient";
 import OTPRequest from "./views/otpRequest";
-import OTPverify from "./views/otpverify";
+import OTPverify from "./views/otpVerify";
 import PasswordReset from "./components/auth/passwordReset";
 
 function App() {

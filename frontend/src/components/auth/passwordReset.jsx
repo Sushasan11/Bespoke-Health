@@ -12,12 +12,11 @@ function PasswordReset() {
 
   const storedEmail = localStorage.getItem("email");
   const otpVerified = localStorage.getItem("otpVerified");
-  const verifiedOtp = localStorage.getItem("verifiedOtp"); // Retrieve the verified OTP from localStorage
-
+  const verifiedOtp = localStorage.getItem("verifiedOtp"); 
   useEffect(() => {
     // Check if OTP is verified, if not redirect to OTP entry
     if (!otpVerified) {
-      navigate("/verify-otp"); // Redirect to OTP entry page
+      navigate("/verify-otp"); 
     }
   }, [otpVerified, navigate]);
 

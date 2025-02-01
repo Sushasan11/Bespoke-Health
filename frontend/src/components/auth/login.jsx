@@ -15,14 +15,24 @@ function Login() {
     setMessage("");
 
     try {
-      const response = await axios.post("/login/", { email, password });
-      setMessage(response.data.message);
+      const response = await axios.post("/login/", {
+        email,
+        password,
+      });
 
-      // Check if the user is a doctor or a patient based on the email format
-      if (email.endsWith(".doctor@gmail.com")) {
-        navigate("/doctor/dashboard"); 
-      } else {
-        navigate("/patient/dashboard"); 
+      if (response.data.access_token) {
+        localStorage.setItem("token", response.data.access_token);
+        localStorage.setItem("user_email", email);
+
+        setMessage("Login successful! Redirecting...");
+
+        // Fetch user role/type from API
+        const userRes = await axios.get("/me/");
+        if (userRes.data.role === "doctor") {
+          navigate("/doctor/dashboard");
+        } else {
+          navigate("/patient/dashboard");
+        }
       }
     } catch (error) {
       if (error.response) {

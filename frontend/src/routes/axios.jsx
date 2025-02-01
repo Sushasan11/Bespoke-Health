@@ -8,4 +8,13 @@ const instance = axios.create({
   },
 });
 
+// Automatically attach JWT token to requests
+instance.interceptors.request.use((config) => {
+  const token = localStorage.getItem("token");
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
 export default instance;

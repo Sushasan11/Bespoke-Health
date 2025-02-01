@@ -1,36 +1,53 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   BrowserRouter as Router,
   Route,
   Routes,
   Navigate,
 } from "react-router-dom";
-import Home from "./views/Home";
+import Home from "./views/home"
 import Login from "./components/auth/login";
 import SignupPatient from "./components/auth/signupPatient";
 import OTPRequest from "./views/otpRequest";
-import OTPverify from "./views/otpVerify";
+import OTPVerify from "./views/otpVerify";
 import PasswordReset from "./components/auth/passwordReset";
+import PatientHome from "./views/patientHome";
+
+// Protected Route Wrapper
+const ProtectedRoute = ({ element }) => {
+  const [isAuthenticated, setIsAuthenticated] = useState(null);
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    setIsAuthenticated(!!token);
+  }, []);
+
+  if (isAuthenticated === null) {
+    return <p>Loading...</p>; // Show loading state while checking auth
+  }
+
+  return isAuthenticated ? element : <Navigate to="/login" />;
+};
 
 function App() {
   return (
     <Router>
       <Routes>
-        {/* Route to Home */}
+        {/* Public Routes */}
         <Route path="/" element={<Home />} />
-
-        {/* User Login */}
         <Route path="/login" element={<Login />} />
-
-        {/* Patient Signup */}
         <Route path="/signup/patient" element={<SignupPatient />} />
-
-        {/* OTP and Password Reset Routes */}
         <Route path="/request-otp" element={<OTPRequest />} />
-        <Route path="/verify-otp" element={<OTPverify />} />
+        <Route path="/verify-otp" element={<OTPVerify />} />
         <Route path="/reset-password" element={<PasswordReset />} />
 
-        {/* Fallback route to handle incorrect URLs */}
+        {/* Protected Routes: Requires Authentication */}
+        <Route
+          path="/patient/dashboard"
+          element={<ProtectedRoute element={<PatientHome />} />}
+        />
+
+        {/* Fallback Route for 404 */}
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
     </Router>

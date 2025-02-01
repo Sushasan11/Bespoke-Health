@@ -2,7 +2,8 @@ import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from database.database import Base, engine
-from controller.patinet_controller import router as patient_router
+from controller.patient_controller import router as patient_router
+
 
 app = FastAPI()
 
@@ -23,5 +24,5 @@ def startup_event():
     Base.metadata.create_all(bind=engine)
 
 
-# Router for the Patient
+# Include router
 app.include_router(patient_router)

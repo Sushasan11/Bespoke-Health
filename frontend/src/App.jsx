@@ -5,17 +5,23 @@ import {
   Routes,
   Navigate,
 } from "react-router-dom";
-import Home from "./views/home"
-import Login from "./components/auth/login";
+import "bootstrap/dist/css/bootstrap.min.css";
+import Home from "./views/home";
+import Login from "./components/auth/patientLogin";
 import SignupPatient from "./components/auth/signupPatient";
 import OTPRequest from "./views/otpRequest";
 import OTPVerify from "./views/otpVerify";
 import PasswordReset from "./components/auth/passwordReset";
 import PatientHome from "./views/patientHome";
+import UpdateProfile from "./components/navbar/updateProfile";
+import ChangePassword from "./components/navbar/changePassword";
+import PatientNavbar from "./components/navbar/patientNavbar";
 
-// Protected Route Wrapper
-const ProtectedRoute = ({ element }) => {
-  const [isAuthenticated, setIsAuthenticated] = useState(null);
+// 🔹 Optimized Protected Route Wrapper
+const ProtectedRoute = ({ children }) => {
+  const [isAuthenticated, setIsAuthenticated] = useState(() => {
+    return !!localStorage.getItem("token");
+  });
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -23,10 +29,10 @@ const ProtectedRoute = ({ element }) => {
   }, []);
 
   if (isAuthenticated === null) {
-    return <p>Loading...</p>; // Show loading state while checking auth
+    return <p>Loading...</p>;
   }
 
-  return isAuthenticated ? element : <Navigate to="/login" />;
+  return isAuthenticated ? children : <Navigate to="/login" />;
 };
 
 function App() {
@@ -37,17 +43,42 @@ function App() {
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup/patient" element={<SignupPatient />} />
-        <Route path="/request-otp" element={<OTPRequest />} />
+        <Route path="/request-password-reset" element={<OTPRequest />} />
         <Route path="/verify-otp" element={<OTPVerify />} />
         <Route path="/reset-password" element={<PasswordReset />} />
 
-        {/* Protected Routes: Requires Authentication */}
+        {/* Protected Routes */}
         <Route
           path="/patient/dashboard"
-          element={<ProtectedRoute element={<PatientHome />} />}
+          element={
+            <ProtectedRoute>
+              <PatientNavbar />
+              <PatientHome />
+            </ProtectedRoute>
+          }
         />
 
-        {/* Fallback Route for 404 */}
+        <Route
+          path="/update-profile"
+          element={
+            <ProtectedRoute>
+              <PatientNavbar />
+              <UpdateProfile />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/change-password"
+          element={
+            <ProtectedRoute>
+              <PatientNavbar />
+              <ChangePassword />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* 🔻 Catch-All 404 Redirect */}
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
     </Router>

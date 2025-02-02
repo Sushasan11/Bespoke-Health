@@ -1,7 +1,12 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from database.database import get_db
-from schemas.patient_schema import PatientRegister, PatientLogin, PatientUpdate
+from schemas.patient_schema import (
+    PatientRegister,
+    PatientLogin,
+    PatientUpdate,
+    PasswordResetRequest,
+)
 from services.patient_service import (
     register_patient_service,
     login_patient_service,
@@ -22,13 +27,13 @@ def register_patient(patient: PatientRegister, db: Session = Depends(get_db)):
     return register_patient_service(patient, db)
 
 
-# Patient Login (JWT Token)
+# Patient Login
 @router.post("/login/")
 def login(patient: PatientLogin, db: Session = Depends(get_db)):
     return login_patient_service(patient, db)
 
 
-# Update Profile (Authenticated)
+# Update Profile
 @router.put("/update-profile/")
 def update_profile(
     patient_data: PatientUpdate,
@@ -38,7 +43,7 @@ def update_profile(
     return update_profile_service(patient_id, patient_data, db)
 
 
-# Get Current Patient
+# Get Patient Info
 @router.get("/me/")
 def get_current_user(
     db: Session = Depends(get_db), patient_id: int = Depends(get_current_user_id)
@@ -46,13 +51,15 @@ def get_current_user(
     return get_patient_service(patient_id, db)
 
 
-# Request OTP for Password Reset
+# Request OTP (Fix for 422)
 @router.post("/request-password-reset/")
-def request_password_reset(email: str, db: Session = Depends(get_db)):
-    return request_password_reset_service(email, db)
+def request_password_reset(
+    request: PasswordResetRequest, db: Session = Depends(get_db)
+):
+    return request_password_reset_service(request, db)
 
 
-# Verify OTP for Password Reset
+# Verify OTP
 @router.post("/verify-password-reset-otp/")
 def verify_password_reset_otp(email: str, otp: int):
     return verify_password_reset_otp_service(email, otp)

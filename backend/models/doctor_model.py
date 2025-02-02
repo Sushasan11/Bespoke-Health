@@ -1,6 +1,5 @@
 from sqlalchemy import Column, Integer, String, Boolean, LargeBinary
-from database import Base
-from sqlalchemy.orm import relationship
+from database.database import Base
 
 
 class Doctor(Base):
@@ -9,6 +8,7 @@ class Doctor(Base):
     id = Column(Integer, primary_key=True, index=True)
     email = Column(String, unique=True, index=True)
     password = Column(String)
+    name = Column(String, nullable=True)
     specialization = Column(String, nullable=True)
     qualification = Column(String, nullable=True)
     experience = Column(Integer, nullable=True)
@@ -17,4 +17,3 @@ class Doctor(Base):
     degree = Column(LargeBinary, nullable=True)
     profilepicture = Column(LargeBinary, nullable=True)
     is_verified = Column(Boolean, default=False)
-

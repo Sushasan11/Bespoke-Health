@@ -10,13 +10,15 @@ function PasswordReset() {
   const [loadingPassword, setLoadingPassword] = useState(false);
   const navigate = useNavigate();
 
+  // Retrieve stored email and OTP
   const storedEmail = localStorage.getItem("email");
   const otpVerified = localStorage.getItem("otpVerified");
-  const verifiedOtp = localStorage.getItem("verifiedOtp"); 
+  const verifiedOtp = localStorage.getItem("verifiedOtp");
+
+  // Redirect if OTP is not verified
   useEffect(() => {
-    // Check if OTP is verified, if not redirect to OTP entry
-    if (!otpVerified) {
-      navigate("/verify-otp"); 
+    if (!otpVerified || otpVerified !== "true") {
+      navigate("/verify-otp");
     }
   }, [otpVerified, navigate]);
 
@@ -26,39 +28,50 @@ function PasswordReset() {
     setError(false);
     setLoadingPassword(true);
 
+    // Validate email and OTP before making request
+    if (!storedEmail || !verifiedOtp) {
+      setPasswordMessage("Invalid OTP session. Please request a new OTP.");
+      setError(true);
+      setLoadingPassword(false);
+      return;
+    }
+
     // Check if new password and confirmation match
     if (newPassword !== confirmPassword) {
       setPasswordMessage("Passwords do not match.");
       setError(true);
       setLoadingPassword(false);
-      return; // Prevent form submission
+      return;
     }
 
     try {
-      // Send the request with email, new password, and the verified OTP
+      // Send password reset request
       const response = await axios.post("/reset-password/", {
         email: storedEmail,
         new_password: newPassword,
-        otp: parseInt(verifiedOtp), // Use the verified OTP from localStorage
+        otp: parseInt(verifiedOtp, 10),
       });
 
       if (response.status === 200) {
         setPasswordMessage("Password reset successfully.");
-        // Clear OTP verification status after successful reset
         localStorage.removeItem("otpVerified");
-        localStorage.removeItem("verifiedOtp"); // Clear the OTP after password reset
+        localStorage.removeItem("verifiedOtp");
+        localStorage.removeItem("email");
+
         setTimeout(() => {
           navigate("/login");
-        }, 5000);
+        }, 3000);
       }
     } catch (error) {
       if (error.response) {
         const { status, data } = error.response;
         setPasswordMessage(
-          `Error ${status}: ${data.detail || "Unknown error"}`
+          `Error ${status}: ${data.detail || "Unexpected error"}`
         );
+      } else if (error.request) {
+        setPasswordMessage("No response from server. Please try again later.");
       } else {
-        setPasswordMessage("No response received. Please try again later.");
+        setPasswordMessage("An error occurred. Please try again.");
       }
       setError(true);
     } finally {

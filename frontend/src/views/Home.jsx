@@ -8,15 +8,18 @@ function Home() {
       {/* Header Section */}
       <header className="header">
         <div className="header-content">
-          <h1>**Logo**</h1>
-          <div className="header-links">
-            <Link to="/login" className="header-link">
+          {/* Replace with actual logo */}
+          <h1>
+            Health DOM Logo
+          </h1>
+          <nav className="header-links">
+            <Link to="/login" className="header-button">
               Login
             </Link>
-            <Link to="/signup/patient" className="header-link">
+            <Link to="/signup/patient" className="header-button">
               Patient Signup
             </Link>
-          </div>
+          </nav>
         </div>
       </header>
 
@@ -27,13 +30,21 @@ function Home() {
           Health DOM is committed to providing top-notch medical care for
           patients and supporting doctors in their healthcare journey.
         </p>
+        <div className="cta-container">
+          <Link to="/signup/patient" className="cta-button">
+            Join as Patient
+          </Link>
+          <Link to="/signup/doctor" className="cta-button doctor">
+            Join as Doctor
+          </Link>
+        </div>
       </main>
 
       {/* Footer Section */}
       <footer className="footer">
         <div className="footer-content">
           <p>Are you a doctor?</p>
-          <Link to="/signup/doctor" className="footer-link">
+          <Link to="/signup/doctor" className="footer-button">
             Doctor Signup
           </Link>
         </div>

@@ -1,112 +1,135 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "../routes/axios";
+import { FaUserMd, FaHospital, FaStethoscope, FaRobot } from "react-icons/fa";
+import "../styles/patientHomeCss.css";
 
 function PatientHome() {
-  const [user, setUser] = useState(null);
-  const [name, setName] = useState("");
-  const [age, setAge] = useState("");
-  const [gender, setGender] = useState("");
-  const [address, setAddress] = useState("");
-  const [phonenumber, setPhonenumber] = useState("");
+  const [doctors, setDoctors] = useState([]);
+  const [departments, setDepartments] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [message, setMessage] = useState("");
-  const [error, setError] = useState(false);
+  const [error, setError] = useState("");
   const navigate = useNavigate();
 
-  // Fetch user details on component mount
+  // Check authentication
   useEffect(() => {
-    axios
-      .get("/me/")
-      .then((res) => {
-        setUser(res.data);
-        setName(res.data.name || "");
-        setAge(res.data.age || "");
-        setGender(res.data.gender || "");
-        setAddress(res.data.address || "");
-        setPhonenumber(res.data.phonenumber || "");
-      })
-      .catch(() => {
-        alert("Session expired. Please login again.");
-        localStorage.removeItem("token");
-        navigate("/login");
-      })
-      .finally(() => setLoading(false));
+    const token = localStorage.getItem("token");
+    if (!token) {
+      navigate("/login");
+    }
   }, [navigate]);
 
-  // Handle profile update
-  const updateProfile = async (e) => {
-    e.preventDefault();
-    setMessage("");
-    setError(false);
+  // Fetch doctors and departments on mount
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [doctorsRes, departmentsRes] = await Promise.all([
+          axios.get("/doctors", {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          }),
+          axios.get("/departments", {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          }),
+        ]);
 
-    try {
-      await axios.put("/update-profile/", {
-        name,
-        age,
-        gender,
-        address,
-        phonenumber,
-      });
+        setDoctors(doctorsRes.data);
+        setDepartments(departmentsRes.data);
+      } catch (error) {
+        console.error("Failed to fetch data:", error);
+        setError("Failed to load data. Please try again later.");
+      } finally {
+        setLoading(false);
+      }
+    };
 
-      setMessage("Profile updated successfully.");
-    } catch (error) {
-      setMessage("Profile update failed.");
-      setError(true);
-    }
-  };
+    fetchData();
+  }, []);
 
-  // Handle logout
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    navigate("/login");
-  };
+  return (
+    <div className="container mt-4">
+      {loading ? (
+        <div className="text-center">
+          <div className="spinner-border text-primary" role="status"></div>
+          <p className="mt-2">Loading...</p>
+        </div>
+      ) : error ? (
+        <div className="alert alert-danger text-center">{error}</div>
+      ) : (
+        <>
+          {/* Doctors Section */}
+          <div className="mb-4">
+            <h2 className="text-center">
+              <FaUserMd className="me-2 text-primary" /> Our Doctors
+            </h2>
+            <div className="row">
+              {doctors.length > 0 ? (
+                doctors.map((doctor) => (
+                  <div key={doctor.id} className="col-md-4 mb-3">
+                    <div className="card shadow">
+                      <div className="card-body">
+                        <h5 className="card-title">{doctor.name}</h5>
+                        <p className="card-text">
+                          <FaStethoscope className="text-success" />{" "}
+                          Specialization: {doctor.specialization}
+                        </p>
+                        <p className="card-text">
+                          <FaHospital className="text-warning" /> Experience:{" "}
+                          {doctor.experience} years
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <p className="text-center text-muted">No doctors available.</p>
+              )}
+            </div>
+          </div>
 
-  return loading ? (
-    <p>Loading profile...</p>
-  ) : (
-    <div>
-      <h2>Welcome, {user?.email}</h2>
+          {/* Departments Section */}
+          <div className="mb-4">
+            <h2 className="text-center">
+              <FaHospital className="me-2 text-danger" /> Departments
+            </h2>
+            <div className="row">
+              {departments.length > 0 ? (
+                departments.map((dept) => (
+                  <div key={dept.id} className="col-md-4 mb-3">
+                    <div className="card shadow">
+                      <div className="card-body">
+                        <h5 className="card-title">{dept.name}</h5>
+                        <p className="card-text">{dept.description}</p>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <p className="text-center text-muted">
+                  No departments available.
+                </p>
+              )}
+            </div>
+          </div>
 
-      <form onSubmit={updateProfile}>
-        <input
-          type="text"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder="Name"
-        />
-        <input
-          type="number"
-          value={age}
-          onChange={(e) => setAge(e.target.value)}
-          placeholder="Age"
-        />
-        <input
-          type="text"
-          value={gender}
-          onChange={(e) => setGender(e.target.value)}
-          placeholder="Gender"
-        />
-        <input
-          type="text"
-          value={address}
-          onChange={(e) => setAddress(e.target.value)}
-          placeholder="Address"
-        />
-        <input
-          type="text"
-          value={phonenumber}
-          onChange={(e) => setPhonenumber(e.target.value)}
-          placeholder="Phone"
-        />
-        <button type="submit">Update Profile</button>
-      </form>
-
-      {message && <p style={{ color: error ? "red" : "green" }}>{message}</p>}
-
-      <button onClick={handleLogout} style={{ marginTop: "20px" }}>
-        Logout
-      </button>
+          {/* Predict Disease Section */}
+          <div className="text-center mt-4">
+            <h2>
+              <FaRobot className="me-2 text-info" /> Predict Disease
+            </h2>
+            <p>Use our AI-based tool to predict diseases based on symptoms.</p>
+            <button
+              onClick={() => navigate("/predict-disease")}
+              className="btn btn-lg btn-primary"
+            >
+              <FaRobot className="me-2" /> Predict Now
+            </button>
+          </div>
+        </>
+      )}
     </div>
   );
 }

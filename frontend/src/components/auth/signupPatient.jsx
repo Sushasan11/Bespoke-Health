@@ -10,11 +10,34 @@ function SignupPatient() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
+  const validateEmail = (email) => {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  };
+
+  const validatePassword = (password) => {
+    return password.length >= 8;
+  };
+
   const handleSignup = async (e) => {
     e.preventDefault();
     setMessage("");
     setError(false);
     setLoading(true);
+
+    // Validate Email and Password
+    if (!validateEmail(email)) {
+      setMessage("Invalid email format.");
+      setError(true);
+      setLoading(false);
+      return;
+    }
+
+    if (!validatePassword(password)) {
+      setMessage("Password must be at least 8 characters long");
+      setError(true);
+      setLoading(false);
+      return;
+    }
 
     try {
       const response = await axios.post("/signup/patient/", {
@@ -30,13 +53,21 @@ function SignupPatient() {
       }
     } catch (error) {
       if (error.response) {
+        if (error.response.status === 400) {
+          setMessage("Email is already registered. Try logging in.");
+        } else {
+          setMessage(
+            `Error ${error.response.status}: ${
+              error.response.data.detail || "Unknown error"
+            }`
+          );
+        }
+      } else if (error.request) {
         setMessage(
-          `Error ${error.response.status}: ${
-            error.response.data.detail || "Unknown error"
-          }`
+          "No response from server. Please check your internet connection."
         );
       } else {
-        setMessage("No response received. Please try again later.");
+        setMessage("An unexpected error occurred. Please try again.");
       }
       setError(true);
     } finally {

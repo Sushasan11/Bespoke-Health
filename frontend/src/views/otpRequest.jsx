@@ -16,25 +16,18 @@ function OTPRequest() {
     setLoadingOtp(true);
 
     try {
-      const response = await axios.post("/request-otp/", { email });
+      const response = await axios.post("/request-password-reset/", {
+        email: email.trim(), // Ensure proper formatting
+      });
 
       if (response.status === 200) {
-        // Save email to localStorage
         localStorage.setItem("email", email);
-        setMessage("OTP sent to your email.");
-        setTimeout(() => {
-          navigate("/verify-otp");
-        }, 3000);
+        setMessage("OTP has been sent to your email.");
+        setTimeout(() => navigate("/verify-otp"), 2000);
       }
     } catch (error) {
-      if (error.response) {
-        const { status, data } = error.response;
-        console.error("Error:", error.response);
-        setMessage(`Error ${status}: ${data.detail || "Unknown error"}`);
-      } else {
-        setMessage("No response received. Please try again later.");
-      }
       setError(true);
+      setMessage(error.response?.data?.detail || "Failed to send OTP.");
     } finally {
       setLoadingOtp(false);
     }

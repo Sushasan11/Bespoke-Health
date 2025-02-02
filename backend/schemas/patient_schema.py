@@ -1,5 +1,4 @@
 from pydantic import BaseModel, EmailStr, Field
-from fastapi import UploadFile
 from typing import Optional
 
 
@@ -34,12 +33,3 @@ class PasswordReset(BaseModel):
     email: EmailStr
     new_password: str = Field(..., min_length=8)
     otp: int
-
-
-class Token(BaseModel):
-    access_token: str
-    token_type: str
-
-
-class TokenData(BaseModel):
-    email: str | None = None

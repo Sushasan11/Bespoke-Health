@@ -44,7 +44,7 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/signup/patient" element={<SignupPatient />} />
         <Route path="/request-password-reset" element={<OTPRequest />} />
-        <Route path="/verify-otp" element={<OTPVerify />} />
+        <Route path="/verify-reset-otp" element={<OTPVerify />} />
         <Route path="/reset-password" element={<PasswordReset />} />
 
         {/* Protected Routes */}

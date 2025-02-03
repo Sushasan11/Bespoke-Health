@@ -1,81 +1,71 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import axios from "../../routes/axios";
 import { useNavigate } from "react-router-dom";
 
-function PasswordReset() {
+function ResetPassword() {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [passwordMessage, setPasswordMessage] = useState("");
+  const [message, setMessage] = useState("");
   const [error, setError] = useState(false);
-  const [loadingPassword, setLoadingPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  // Retrieve stored email and OTP
   const storedEmail = localStorage.getItem("email");
-  const otpVerified = localStorage.getItem("otpVerified");
-  const verifiedOtp = localStorage.getItem("verifiedOtp");
+  const storedOtp = localStorage.getItem("verifiedOtp");
 
-  // Redirect if OTP is not verified
-  useEffect(() => {
-    if (!otpVerified || otpVerified !== "true") {
-      navigate("/verify-otp");
-    }
-  }, [otpVerified, navigate]);
-
+  // Resets the password using the verified OTP
   const handlePasswordReset = async (e) => {
     e.preventDefault();
-    setPasswordMessage("");
+    setMessage("");
     setError(false);
-    setLoadingPassword(true);
 
-    // Validate email and OTP before making request
-    if (!storedEmail || !verifiedOtp) {
-      setPasswordMessage("Invalid OTP session. Please request a new OTP.");
+    // Check if OTP is verified
+    if (!storedOtp) {
+      setMessage("OTP not verified. Please verify OTP first.");
       setError(true);
-      setLoadingPassword(false);
       return;
     }
 
-    // Check if new password and confirmation match
+    // Check if passwords match
     if (newPassword !== confirmPassword) {
-      setPasswordMessage("Passwords do not match.");
+      setMessage("Passwords do not match.");
       setError(true);
-      setLoadingPassword(false);
       return;
     }
+
+    setLoading(true);
 
     try {
-      // Send password reset request
       const response = await axios.post("/reset-password/", {
-        email: storedEmail,
+        email: storedEmail.trim(),
         new_password: newPassword,
-        otp: parseInt(verifiedOtp, 10),
+        otp: Number(storedOtp),
       });
 
       if (response.status === 200) {
-        setPasswordMessage("Password reset successfully.");
+        setMessage("Password reset successfully.");
         localStorage.removeItem("otpVerified");
         localStorage.removeItem("verifiedOtp");
-        localStorage.removeItem("email");
 
         setTimeout(() => {
           navigate("/login");
-        }, 3000);
+        }, 2000);
       }
     } catch (error) {
       if (error.response) {
-        const { status, data } = error.response;
-        setPasswordMessage(
-          `Error ${status}: ${data.detail || "Unexpected error"}`
+        setMessage(
+          `Error ${error.response.status}: ${
+            error.response.data.detail || "Invalid OTP or user not found"
+          }`
         );
       } else if (error.request) {
-        setPasswordMessage("No response from server. Please try again later.");
+        setMessage("No response from server. Please check your connection.");
       } else {
-        setPasswordMessage("An error occurred. Please try again.");
+        setMessage("An unexpected error occurred. Please try again.");
       }
       setError(true);
     } finally {
-      setLoadingPassword(false);
+      setLoading(false);
     }
   };
 
@@ -87,25 +77,23 @@ function PasswordReset() {
           type="password"
           value={newPassword}
           onChange={(e) => setNewPassword(e.target.value)}
-          placeholder="New Password"
+          placeholder="Enter new password"
           required
         />
         <input
           type="password"
           value={confirmPassword}
           onChange={(e) => setConfirmPassword(e.target.value)}
-          placeholder="Confirm Password"
+          placeholder="Retype new password"
           required
         />
-        <button type="submit" disabled={loadingPassword}>
-          {loadingPassword ? "Resetting..." : "Reset Password"}
+        <button type="submit" disabled={loading}>
+          {loading ? "Resetting..." : "Reset Password"}
         </button>
       </form>
-      {passwordMessage && (
-        <p style={{ color: error ? "red" : "green" }}>{passwordMessage}</p>
-      )}
+      {message && <p style={{ color: error ? "red" : "green" }}>{message}</p>}
     </div>
   );
 }
 
-export default PasswordReset;
+export default ResetPassword;

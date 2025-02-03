@@ -17,17 +17,29 @@ function OTPRequest() {
 
     try {
       const response = await axios.post("/request-password-reset/", {
-        email: email.trim(), // Ensure proper formatting
+        email: email.trim(),
       });
 
       if (response.status === 200) {
         localStorage.setItem("email", email);
         setMessage("OTP has been sent to your email.");
-        setTimeout(() => navigate("/verify-otp"), 2000);
+        setTimeout(() => navigate("/verify-reset-otp"), 2000);
       }
     } catch (error) {
+      let errorMsg = "Failed to send OTP.";
+
+      if (error.response) {
+        // Server responded with an error
+        errorMsg = error.response.data?.detail || errorMsg;
+      } else if (error.code === "ECONNABORTED") {
+        errorMsg = "Request timed out. Try again.";
+      } else {
+        errorMsg =
+          "Could not connect to the server. Check your internet connection.";
+      }
+
       setError(true);
-      setMessage(error.response?.data?.detail || "Failed to send OTP.");
+      setMessage(errorMsg);
     } finally {
       setLoadingOtp(false);
     }

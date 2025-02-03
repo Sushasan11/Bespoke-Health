@@ -11,22 +11,21 @@ function OTPVerify() {
 
   const storedEmail = localStorage.getItem("email");
 
-  // Redirect user if email is missing
+  // Redirects the user to the OTP request page if no email is found
   useEffect(() => {
     if (!storedEmail) {
       navigate("/request-otp");
     }
   }, [storedEmail, navigate]);
 
-  // Validate OTP format
-  const isValidOTP = (otp) => /^\d{6}$/.test(otp); // Ensures OTP is 6-digit number
+  // Checks if the OTP is a 6-digit number
+  const isValidOTP = (otp) => /^\d{6}$/.test(otp);
 
   const handleOTPVerify = async (e) => {
     e.preventDefault();
     setMessage("");
     setError(false);
 
-    // Check if OTP is valid
     if (!isValidOTP(otp)) {
       setMessage("OTP must be a 6-digit number.");
       setError(true);
@@ -36,26 +35,27 @@ function OTPVerify() {
     setLoading(true);
 
     try {
-      const response = await axios.post("/verify-password-reset-otp/", {
-        email: storedEmail,
-        otp: parseInt(otp, 10), 
+      const response = await axios.post("/verify-reset-otp/", {
+        email: storedEmail.trim(),
+        otp: Number(otp),
       });
 
       if (response.status === 200) {
-        // Store OTP verification status
         localStorage.setItem("otpVerified", "true");
         localStorage.setItem("verifiedOtp", otp);
-
-        // OTP verified successfully, redirect to reset-password
         setMessage("OTP verified successfully.");
+
         setTimeout(() => {
           navigate("/reset-password", { replace: true });
         }, 2000);
       }
     } catch (error) {
       if (error.response) {
-        const { status, data } = error.response;
-        setMessage(`Error ${status}: ${data.detail || "Invalid OTP"}`);
+        setMessage(
+          `Error ${error.response.status}: ${
+            error.response.data.detail || "Invalid OTP"
+          }`
+        );
       } else if (error.request) {
         setMessage("No response from server. Please check your connection.");
       } else {

@@ -8,10 +8,9 @@ from controller.patient_controller import router as patient_router
 app = FastAPI()
 
 # CORS Configuration
-origins = ["*"]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

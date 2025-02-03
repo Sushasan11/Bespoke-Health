@@ -1,3 +1,4 @@
+import asyncio
 from sqlalchemy.orm import Session
 from fastapi import HTTPException
 from schemas.patient_schema import (
@@ -13,18 +14,15 @@ from repositories.patient_repository import (
 )
 from models.patient_model import Patient
 from utils.password_utils import hash_password, verify_password, create_access_token
-from utils.otp_utils import send_otp, verify_otp, delete_otp
 
 
 # Patient Signup Service
 def register_patient_service(patient: PatientRegister, db: Session):
     email_lower = patient.email.lower()
 
-    # Check if email already exists
     if get_patient_by_email(db, email_lower):
         raise HTTPException(status_code=400, detail="Email is already registered")
 
-    # Create patient with hashed password
     hashed_password = hash_password(patient.password)
     return create_patient(db, email_lower, hashed_password)
 
@@ -61,19 +59,29 @@ def update_profile_service(patient_id: int, patient_data: PatientUpdate, db: Ses
     return patient
 
 
-# Request OTP for Password Reset (Fix for 422)
-def request_password_reset_service(request: PasswordResetRequest, db: Session):
+# Request OTP for Password Reset
+async def request_password_reset_service(request: PasswordResetRequest, db: Session):
     email_lower = request.email.lower()
     patient = get_patient_by_email(db, email_lower)
     if not patient:
         raise HTTPException(status_code=404, detail="User not found")
 
-    send_otp(email_lower)
-    return {"message": "OTP sent"}
+    from utils.otp_utils import send_otp
+
+    otp = await send_otp(email_lower)
+
+    if otp is not None:
+        return {"message": "OTP sent successfully"}
+    else:
+        raise HTTPException(
+            status_code=400, detail="Failed to send OTP. Please try again later."
+        )
 
 
 # Verify OTP
 def verify_password_reset_otp_service(email: str, otp: int):
+    from utils.otp_utils import verify_otp
+
     email_lower = email.lower()
     if not verify_otp(email_lower, otp):
         raise HTTPException(status_code=400, detail="Invalid or expired OTP")
@@ -83,6 +91,8 @@ def verify_password_reset_otp_service(email: str, otp: int):
 
 # Reset Password
 def reset_password_service(email: str, new_password: str, otp: int, db: Session):
+    from utils.otp_utils import verify_otp, delete_otp
+
     email_lower = email.lower()
     patient = get_patient_by_email(db, email_lower)
 

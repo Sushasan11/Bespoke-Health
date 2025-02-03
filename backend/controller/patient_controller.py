@@ -6,6 +6,8 @@ from schemas.patient_schema import (
     PatientLogin,
     PatientUpdate,
     PasswordResetRequest,
+    OTPVerification,
+    PasswordReset,
 )
 from services.patient_service import (
     register_patient_service,
@@ -21,19 +23,19 @@ from utils.password_utils import get_current_user_id
 router = APIRouter()
 
 
-# Patient Signup
+# Registers a new patient
 @router.post("/signup/patient/")
 def register_patient(patient: PatientRegister, db: Session = Depends(get_db)):
     return register_patient_service(patient, db)
 
 
-# Patient Login
+# Logs in the patient and returns an access token
 @router.post("/login/")
 def login(patient: PatientLogin, db: Session = Depends(get_db)):
     return login_patient_service(patient, db)
 
 
-# Update Profile
+# Updates the patient profile information
 @router.put("/update-profile/")
 def update_profile(
     patient_data: PatientUpdate,
@@ -43,7 +45,7 @@ def update_profile(
     return update_profile_service(patient_id, patient_data, db)
 
 
-# Get Patient Info
+# Retrieves the logged-in patient's profile details
 @router.get("/me/")
 def get_current_user(
     db: Session = Depends(get_db), patient_id: int = Depends(get_current_user_id)
@@ -51,23 +53,25 @@ def get_current_user(
     return get_patient_service(patient_id, db)
 
 
-# Request OTP (Fix for 422)
+# Sends an OTP to the user's email for password reset
 @router.post("/request-password-reset/")
-def request_password_reset(
+async def request_password_reset(
     request: PasswordResetRequest, db: Session = Depends(get_db)
 ):
-    return request_password_reset_service(request, db)
+    return await request_password_reset_service(request, db)
 
 
-# Verify OTP
-@router.post("/verify-password-reset-otp/")
-def verify_password_reset_otp(email: str, otp: int):
-    return verify_password_reset_otp_service(email, otp)
+# Verifies the OTP entered by the user
+@router.post("/verify-reset-otp/")
+def verify_password_reset_otp(request: OTPVerification):
+    is_verified = verify_password_reset_otp_service(request.email, request.otp)
+    if is_verified:
+        return {"message": "OTP verified successfully"}
+    else:
+        raise HTTPException(status_code=400, detail="Invalid or expired OTP")
 
 
-# Reset Password
+# Resets the user's password after successful OTP verification
 @router.post("/reset-password/")
-def reset_password(
-    email: str, new_password: str, otp: int, db: Session = Depends(get_db)
-):
-    return reset_password_service(email, new_password, otp, db)
+def reset_password(request: PasswordReset, db: Session = Depends(get_db)):
+    return reset_password_service(request.email, request.new_password, request.otp, db)

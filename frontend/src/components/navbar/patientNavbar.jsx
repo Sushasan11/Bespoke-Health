@@ -24,17 +24,22 @@ function PatientNavbar() {
   const notificationRef = useRef(null);
   const modalRef = useRef(null);
 
-  // Fetch user profile and check if profile is updated
+  // Fetch user profile and check if KYC is updated
   useEffect(() => {
     const fetchPatientData = async () => {
       try {
         const response = await axios.get("/me/");
         setPatientName(response.data.name || "Patient");
 
-        if (response.data.profileUpdated === false) {
-          setNotifications(["Update your profile!"]);
-        } else {
+        // Check for KYC notification
+        const kycMessage = localStorage.getItem("kyc_notification");
+
+        // Remove notification if KYC is completed
+        if (response.data.name && kycMessage) {
+          localStorage.removeItem("kyc_notification");
           setNotifications([]);
+        } else if (!response.data.name && kycMessage) {
+          setNotifications([kycMessage]);
         }
       } catch (error) {
         console.error("Failed to fetch patient data");
@@ -133,7 +138,10 @@ function PatientNavbar() {
                         key={index}
                         className="notification-item"
                         onClick={() => {
-                          if (notif === "Update your profile!") {
+                          if (
+                            notif ===
+                            "Please verify your KYC to access all features."
+                          ) {
                             navigate("/update-profile");
                             setNotifications([]);
                           }

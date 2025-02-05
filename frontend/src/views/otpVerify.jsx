@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
-import axios from "../routes/axios";
 import { useNavigate } from "react-router-dom";
+import axios from "../routes/axios";
+import "../styles/otpVerifyCss.css";
 
 function OTPVerify() {
   const [otp, setOtp] = useState("");
@@ -11,14 +12,12 @@ function OTPVerify() {
 
   const storedEmail = localStorage.getItem("email");
 
-  // Redirects the user to the OTP request page if no email is found
   useEffect(() => {
     if (!storedEmail) {
       navigate("/request-otp");
     }
   }, [storedEmail, navigate]);
 
-  // Checks if the OTP is a 6-digit number
   const isValidOTP = (otp) => /^\d{6}$/.test(otp);
 
   const handleOTPVerify = async (e) => {
@@ -50,17 +49,16 @@ function OTPVerify() {
         }, 2000);
       }
     } catch (error) {
+      let errorMsg = "Invalid OTP.";
       if (error.response) {
-        setMessage(
-          `Error ${error.response.status}: ${
-            error.response.data.detail || "Invalid OTP"
-          }`
-        );
+        errorMsg = error.response.data.detail || errorMsg;
       } else if (error.request) {
-        setMessage("No response from server. Please check your connection.");
+        errorMsg = "No response from server. Check your connection.";
       } else {
-        setMessage("An unexpected error occurred. Please try again.");
+        errorMsg = "An unexpected error occurred. Please try again.";
       }
+
+      setMessage(errorMsg);
       setError(true);
     } finally {
       setLoading(false);
@@ -68,21 +66,59 @@ function OTPVerify() {
   };
 
   return (
-    <div>
-      <h2>Enter OTP</h2>
-      <form onSubmit={handleOTPVerify}>
-        <input
-          type="text"
-          value={otp}
-          onChange={(e) => setOtp(e.target.value)}
-          placeholder="Enter OTP"
-          required
-        />
-        <button type="submit" disabled={loading}>
-          {loading ? "Verifying..." : "Verify OTP"}
-        </button>
-      </form>
-      {message && <p style={{ color: error ? "red" : "green" }}>{message}</p>}
+    <div className="container otp-page">
+      <div className="row justify-content-center align-items-center min-vh-100">
+        <div className="col-12 col-md-6">
+          <div className="card shadow-lg">
+            <div className="card-body position-relative">
+              <button
+                className="btn btn-outline-secondary position-absolute top-0 start-0 m-3"
+                onClick={() => navigate(-1)}
+                type="button"
+              >
+                &larr; Back
+              </button>
+
+              <h2 className="text-center mb-4">Enter OTP</h2>
+
+              <form onSubmit={handleOTPVerify}>
+                <div className="mb-3">
+                  <input
+                    type="text"
+                    className="form-control text-center"
+                    placeholder="Enter 6-digit OTP"
+                    value={otp}
+                    onChange={(e) => setOtp(e.target.value)}
+                    maxLength="6"
+                    required
+                  />
+                </div>
+
+                {message && (
+                  <div
+                    className={`alert ${
+                      error ? "alert-danger" : "alert-success"
+                    }`}
+                    role="alert"
+                  >
+                    {message}
+                  </div>
+                )}
+
+                <div className="d-grid">
+                  <button
+                    type="submit"
+                    className="btn btn-primary"
+                    disabled={loading}
+                  >
+                    {loading ? "Verifying..." : "Verify OTP"}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

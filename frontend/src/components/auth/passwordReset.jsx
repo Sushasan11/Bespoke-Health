@@ -1,6 +1,7 @@
-import React, { useState } from "react";
-import axios from "../../routes/axios";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import axios from "../../routes/axios";
+import "../../styles/passwordResetCss.css";
 
 function ResetPassword() {
   const [newPassword, setNewPassword] = useState("");
@@ -13,20 +14,25 @@ function ResetPassword() {
   const storedEmail = localStorage.getItem("email");
   const storedOtp = localStorage.getItem("verifiedOtp");
 
-  // Resets the password using the verified OTP
+  // Redirects if OTP is not verified
+  useEffect(() => {
+    if (!storedOtp) {
+      navigate("/request-otp");
+    }
+  }, [storedOtp, navigate]);
+
   const handlePasswordReset = async (e) => {
     e.preventDefault();
     setMessage("");
     setError(false);
 
-    // Check if OTP is verified
-    if (!storedOtp) {
-      setMessage("OTP not verified. Please verify OTP first.");
+    // Password validation
+    if (newPassword.length < 8) {
+      setMessage("Password must be at least 8 characters long.");
       setError(true);
       return;
     }
 
-    // Check if passwords match
     if (newPassword !== confirmPassword) {
       setMessage("Passwords do not match.");
       setError(true);
@@ -46,23 +52,23 @@ function ResetPassword() {
         setMessage("Password reset successfully.");
         localStorage.removeItem("otpVerified");
         localStorage.removeItem("verifiedOtp");
+        localStorage.removeItem("email");
 
         setTimeout(() => {
           navigate("/login");
         }, 2000);
       }
     } catch (error) {
+      let errorMsg = "An unexpected error occurred.";
+
       if (error.response) {
-        setMessage(
-          `Error ${error.response.status}: ${
-            error.response.data.detail || "Invalid OTP or user not found"
-          }`
-        );
+        errorMsg =
+          error.response.data.detail || "Invalid OTP or user not found";
       } else if (error.request) {
-        setMessage("No response from server. Please check your connection.");
-      } else {
-        setMessage("An unexpected error occurred. Please try again.");
+        errorMsg = "No response from server. Check your connection.";
       }
+
+      setMessage(errorMsg);
       setError(true);
     } finally {
       setLoading(false);
@@ -70,28 +76,69 @@ function ResetPassword() {
   };
 
   return (
-    <div>
-      <h2>Reset Password</h2>
-      <form onSubmit={handlePasswordReset}>
-        <input
-          type="password"
-          value={newPassword}
-          onChange={(e) => setNewPassword(e.target.value)}
-          placeholder="Enter new password"
-          required
-        />
-        <input
-          type="password"
-          value={confirmPassword}
-          onChange={(e) => setConfirmPassword(e.target.value)}
-          placeholder="Retype new password"
-          required
-        />
-        <button type="submit" disabled={loading}>
-          {loading ? "Resetting..." : "Reset Password"}
-        </button>
-      </form>
-      {message && <p style={{ color: error ? "red" : "green" }}>{message}</p>}
+    <div className="container reset-password-page">
+      <div className="row justify-content-center align-items-center min-vh-100">
+        <div className="col-12 col-md-6">
+          <div className="card shadow-lg">
+            <div className="card-body">
+              <button
+                className="btn btn-outline-secondary mb-3"
+                onClick={() => navigate(-1)}
+              >
+                &larr; Back
+              </button>
+
+              <h2 className="mb-4">Reset Password</h2>
+
+              <form onSubmit={handlePasswordReset}>
+                <div className="mb-3">
+                  <input
+                    type="password"
+                    className="form-control"
+                    placeholder="Enter new password"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    required
+                    minLength="8"
+                  />
+                </div>
+
+                <div className="mb-3">
+                  <input
+                    type="password"
+                    className="form-control"
+                    placeholder="Retype new password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    required
+                    minLength="8"
+                  />
+                </div>
+
+                {message && (
+                  <div
+                    className={`alert ${
+                      error ? "alert-danger" : "alert-success"
+                    }`}
+                  >
+                    {message}
+                  </div>
+                )}
+
+                <div className="d-grid">
+                  <button
+                    type="submit"
+                    className="btn btn-primary"
+                    disabled={loading}
+                  >
+                    {loading ? "Resetting..." : "Reset Password"}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

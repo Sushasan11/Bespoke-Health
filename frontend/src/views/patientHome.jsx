@@ -11,7 +11,6 @@ function PatientHome() {
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
-  // Check authentication
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (!token) {
@@ -19,7 +18,6 @@ function PatientHome() {
     }
   }, [navigate]);
 
-  // Fetch doctors and departments on mount
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -50,9 +48,9 @@ function PatientHome() {
   }, []);
 
   return (
-    <div className="container mt-4">
+    <div className="container patient-home">
       {loading ? (
-        <div className="text-center">
+        <div className="loading-spinner">
           <div className="spinner-border text-primary" role="status"></div>
           <p className="mt-2">Loading...</p>
         </div>
@@ -61,45 +59,47 @@ function PatientHome() {
       ) : (
         <>
           {/* Doctors Section */}
-          <div className="mb-4">
-            <h2 className="text-center">
-              <FaUserMd className="me-2 text-primary" /> Our Doctors
+          <section className="mb-5">
+            <h2 className="section-header">
+              <FaUserMd className="text-primary" /> Our Doctors
             </h2>
             <div className="row">
               {doctors.length > 0 ? (
                 doctors.map((doctor) => (
-                  <div key={doctor.id} className="col-md-4 mb-3">
-                    <div className="card shadow">
+                  <div key={doctor.id} className="col-md-4 mb-4">
+                    <div className="card h-100 shadow-sm">
                       <div className="card-body">
                         <h5 className="card-title">{doctor.name}</h5>
                         <p className="card-text">
-                          <FaStethoscope className="text-success" />{" "}
+                          <FaStethoscope className="text-success me-2" />
                           Specialization: {doctor.specialization}
                         </p>
                         <p className="card-text">
-                          <FaHospital className="text-warning" /> Experience:{" "}
-                          {doctor.experience} years
+                          <FaHospital className="text-warning me-2" />
+                          Experience: {doctor.experience} years
                         </p>
                       </div>
                     </div>
                   </div>
                 ))
               ) : (
-                <p className="text-center text-muted">No doctors available.</p>
+                <p className="text-center text-muted w-100">
+                  No doctors available.
+                </p>
               )}
             </div>
-          </div>
+          </section>
 
           {/* Departments Section */}
-          <div className="mb-4">
-            <h2 className="text-center">
-              <FaHospital className="me-2 text-danger" /> Departments
+          <section className="mb-5">
+            <h2 className="section-header">
+              <FaHospital className="text-danger" /> Departments
             </h2>
             <div className="row">
               {departments.length > 0 ? (
                 departments.map((dept) => (
-                  <div key={dept.id} className="col-md-4 mb-3">
-                    <div className="card shadow">
+                  <div key={dept.id} className="col-md-4 mb-4">
+                    <div className="card h-100 shadow-sm">
                       <div className="card-body">
                         <h5 className="card-title">{dept.name}</h5>
                         <p className="card-text">{dept.description}</p>
@@ -108,26 +108,26 @@ function PatientHome() {
                   </div>
                 ))
               ) : (
-                <p className="text-center text-muted">
+                <p className="text-center text-muted w-100">
                   No departments available.
                 </p>
               )}
             </div>
-          </div>
+          </section>
 
           {/* Predict Disease Section */}
-          <div className="text-center mt-4">
-            <h2>
-              <FaRobot className="me-2 text-info" /> Predict Disease
+          <section className="predict-section">
+            <h2 className="section-header">
+              <FaRobot className="text-info" /> Predict Disease
             </h2>
             <p>Use our AI-based tool to predict diseases based on symptoms.</p>
             <button
               onClick={() => navigate("/predict-disease")}
-              className="btn btn-lg btn-primary"
+              className="btn btn-primary predict-btn"
             >
               <FaRobot className="me-2" /> Predict Now
             </button>
-          </div>
+          </section>
         </>
       )}
     </div>

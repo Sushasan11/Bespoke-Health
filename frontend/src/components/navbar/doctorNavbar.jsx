@@ -76,17 +76,29 @@ const DoctorNavbar = () => {
   return (
     <nav className="navbar navbar-expand-lg navbar-light bg-white shadow-sm fixed-top">
       <div className="container-fluid">
-        <Link className="navbar-brand text-primary fw-bold" to="/doctor/dashboard">
+        <Link
+          className="navbar-brand text-primary fw-bold"
+          to="/doctor/dashboard"
+        >
           MedicalApp
         </Link>
 
-        <button className="navbar-toggler" type="button" data-bs-toggle="collapse"
-          data-bs-target="#doctorNavbar" aria-controls="doctorNavbar"
-          aria-expanded="false" aria-label="Toggle navigation">
+        <button
+          className="navbar-toggler"
+          type="button"
+          data-bs-toggle="collapse"
+          data-bs-target="#doctorNavbar"
+          aria-controls="doctorNavbar"
+          aria-expanded="false"
+          aria-label="Toggle navigation"
+        >
           <span className="navbar-toggler-icon"></span>
         </button>
 
-        <div className="collapse navbar-collapse justify-content-between" id="doctorNavbar">
+        <div
+          className="collapse navbar-collapse justify-content-between"
+          id="doctorNavbar"
+        >
           <ul className="navbar-nav">
             <li className="nav-item">
               <Link className="nav-link text-dark" to="/doctor/patients">
@@ -108,16 +120,24 @@ const DoctorNavbar = () => {
                 <div className="kyc-alert">
                   <FaExclamationCircle className="text-danger me-2" />
                   <span>Verify KYC</span>
-                  <Link to="/doctor/update-profile" className="ms-2 text-primary fw-bold">
+                  <Link
+                    to="/doctor/update-profile"
+                    className="ms-2 text-primary fw-bold"
+                  >
                     Update Now
                   </Link>
                 </div>
               </li>
             )}
 
-            <li className="nav-item dropdown me-3 notification-container" ref={notificationRef}>
-              <button className="btn btn-outline-dark position-relative"
-                onClick={() => setShowNotifications(!showNotifications)}>
+            <li
+              className="nav-item dropdown me-3 notification-container"
+              ref={notificationRef}
+            >
+              <button
+                className="btn btn-outline-dark position-relative"
+                onClick={() => setShowNotifications(!showNotifications)}
+              >
                 <FaBell />
                 {unreadCount > 0 && (
                   <span className="badge bg-danger position-absolute top-0 end-0">
@@ -130,7 +150,9 @@ const DoctorNavbar = () => {
                 <ul className="dropdown-menu notifications-menu">
                   <li className="dropdown-header">Notifications</li>
                   {notifications.length === 0 ? (
-                    <li className="dropdown-item text-muted">No new notifications</li>
+                    <li className="dropdown-item text-muted">
+                      No new notifications
+                    </li>
                   ) : (
                     notifications.map((notification) => (
                       <li key={notification.id} className="dropdown-item">
@@ -143,15 +165,28 @@ const DoctorNavbar = () => {
             </li>
 
             <li className="nav-item dropdown" ref={profileRef}>
-              <button className="btn btn-outline-dark dropdown-toggle"
-                onClick={() => setShowProfile(!showProfile)}>
+              <button
+                className="btn btn-outline-dark dropdown-toggle"
+                onClick={() => setShowProfile(!showProfile)}
+              >
                 <FaUser className="me-2" />
                 {doctorName}
               </button>
               {showProfile && (
                 <ul className="dropdown-menu dropdown-menu-end">
-                  <li><Link className="dropdown-item" to="/doctor/profile"><FaCog /> My Profile</Link></li>
-                  <li><button className="dropdown-item text-danger" onClick={handleLogout}><FaSignOutAlt /> Logout</button></li>
+                  <li>
+                    <Link className="dropdown-item" to="/doctor/profile">
+                      <FaCog /> My Profile
+                    </Link>
+                  </li>
+                  <li>
+                    <button
+                      className="dropdown-item text-danger"
+                      onClick={handleLogout}
+                    >
+                      <FaSignOutAlt /> Logout
+                    </button>
+                  </li>
                 </ul>
               )}
             </li>

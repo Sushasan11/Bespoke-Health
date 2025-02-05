@@ -20,7 +20,14 @@ function UpdateProfile() {
     // Fetch current patient data
     axios
       .get("/me/")
-      .then((res) => setProfile(res.data))
+      .then((res) => {
+        setProfile(res.data);
+
+        // If the patient has completed KYC, remove the notification
+        if (res.data.name) {
+          localStorage.removeItem("kyc_notification");
+        }
+      })
       .catch(() => {
         setMessage("Failed to load profile.");
         navigate("/login");
@@ -56,6 +63,12 @@ function UpdateProfile() {
       const response = await axios.put("/update-profile/", profile);
       if (response.status === 200) {
         setMessage("Profile updated successfully!");
+
+        // Remove KYC notification if KYC is now completed
+        if (profile.name) {
+          localStorage.removeItem("kyc_notification");
+        }
+
         setTimeout(() => {
           navigate("/patient/dashboard"); // Redirect after success
         }, 2000);

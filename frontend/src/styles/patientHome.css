@@ -1,0 +1,70 @@
+/* styles/patientHomeCss.css */
+
+.patient-home {
+  background-color: #f8f9fa;
+  min-height: 100vh;
+  padding: 2rem 0;
+}
+
+.patient-home .section-header {
+  color: #2c3e50;
+  margin-bottom: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.patient-home .section-header svg {
+  margin-right: 0.75rem;
+}
+
+.patient-home .card {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  border: none;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.patient-home .card:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+}
+
+.patient-home .card-body {
+  padding: 1.5rem;
+}
+
+.patient-home .predict-section {
+  background-color: #f0f4f8;
+  border-radius: 12px;
+  padding: 2rem;
+  text-align: center;
+}
+
+.patient-home .predict-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  padding: 12px 24px;
+  transition: all 0.3s ease;
+}
+
+.patient-home .predict-btn svg {
+  margin-right: 0.5rem;
+}
+
+.patient-home .loading-spinner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+}
+
+@media (max-width: 768px) {
+  .patient-home .card-deck {
+    display: flex;
+    flex-direction: column;
+  }
+}

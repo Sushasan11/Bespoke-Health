@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
+from pydantic import BaseModel
 from database.database import get_db
 from schemas.patient_schema import (
     PatientRegister,
@@ -17,10 +18,17 @@ from services.patient_service import (
     request_password_reset_service,
     verify_password_reset_otp_service,
     reset_password_service,
+    google_signup_service,
 )
 from utils.password_utils import get_current_user_id
+from utils.google_auth_utils import verify_google_token
 
-router = APIRouter()
+router = APIRouter(tags=["Patient"])
+
+
+# Define request model for Google Sign-In
+class GoogleAuthRequest(BaseModel):
+    token: str
 
 
 # Registers a new patient
@@ -75,3 +83,13 @@ def verify_password_reset_otp(request: OTPVerification):
 @router.post("/reset-password/")
 def reset_password(request: PasswordReset, db: Session = Depends(get_db)):
     return reset_password_service(request.email, request.new_password, request.otp, db)
+
+
+# Handles Google OAuth signup/login for patients
+@router.post("/auth/google/patient/")
+def google_auth_patient(request: GoogleAuthRequest, db: Session = Depends(get_db)):
+    user_info = verify_google_token(request.token)  # Verify the token
+    if not user_info:
+        raise HTTPException(status_code=400, detail="Invalid Google Token")
+
+    return google_signup_service(user_info, db)  

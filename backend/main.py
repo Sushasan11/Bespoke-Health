@@ -3,7 +3,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from database.database import Base, engine
 from controller.patient_controller import router as patient_router
-
+from controller.doctor_controller import router as doctor_router
 
 app = FastAPI()
 
@@ -25,3 +25,4 @@ def startup_event():
 
 # Include router
 app.include_router(patient_router)
+app.include_router(doctor_router)

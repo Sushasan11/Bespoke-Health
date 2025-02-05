@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 import random
 import logging
 import asyncio
-from utils.email_utils import send_otp_email  # Ensure this is correctly imported
+from utils.email_utils import send_otp_email
 
 otp_storage = {}
 otp_expiry_times = {}

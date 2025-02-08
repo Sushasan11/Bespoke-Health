@@ -5,7 +5,6 @@ import axios from "../routes/axios";
 function DoctorHome() {
   const [doctor, setDoctor] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [kycPending, setKycPending] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -16,11 +15,7 @@ function DoctorHome() {
         });
 
         setDoctor(response.data);
-        setKycPending(!response.data.is_verified);
-
-        if (!response.data.is_verified) {
-          navigate("/doctor/kyc-warning");
-        }
+        localStorage.setItem("kyc_status", response.data.kyc_status);
       } catch (error) {
         console.error("Error fetching doctor data:", error);
         localStorage.removeItem("token");
@@ -39,12 +34,6 @@ function DoctorHome() {
 
   return (
     <div className="doctor-home">
-      {kycPending && (
-        <div className="kyc-warning">
-          <p>🚨 Please verify your KYC to access all features.</p>
-          <a href="/doctor/update-profile">Update KYC</a>
-        </div>
-      )}
       <h2>Welcome, {doctor?.name || "Doctor"}!</h2>
       {doctor?.profile_picture && (
         <img

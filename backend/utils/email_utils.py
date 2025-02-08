@@ -100,13 +100,15 @@ def send_otp_email(to_email, subject, otp):
     return send_email(to_email, subject, text, html)
 
 
-# Function to send General Notifications (e.g., KYC Reminder)
+# Function to send General Notifications
 def send_notification_email(to_email, subject, body):
     text = f"""
     {body}
-
+    Hello,
+    Please Fill the KYC Updated for full features.
+    
     Best Regards,
-    Health DOM
+    Bespoke Health
     """
 
     html = f"""
@@ -165,7 +167,7 @@ def send_notification_email(to_email, subject, body):
     return send_email(to_email, subject, text, html)
 
 
-# Core function to send email (used by both OTP and notifications)
+# Core function to send email used by OTP and notifications
 def send_email(to_email, subject, text_body, html_body):
     message = MIMEMultipart("alternative")
     message["From"] = SENDER_EMAIL

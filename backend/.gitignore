@@ -1,0 +1,45 @@
+# Ignore environment variables
+.env
+*.env
+
+# Ignore virtual environments
+venv/
+.env/
+.venv/
+
+# Ignore Python compiled files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Ignore database files
+*.sqlite3
+*.db
+
+# Ignore logs
+logs/
+*.log
+
+# Ignore Alembic migrations (optional)
+alembic/versions/
+
+# Ignore editor settings
+.vscode/
+.idea/
+*.swp
+*.swo
+*.swn
+
+# Ignore build artifacts
+dist/
+build/
+*.egg-info/
+
+# Ignore cache
+.mypy_cache/
+.pytest_cache/
+.coverage
+
+# Ignore any specific folder 
+uploads/

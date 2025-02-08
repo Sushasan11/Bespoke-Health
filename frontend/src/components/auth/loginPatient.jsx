@@ -2,12 +2,13 @@ import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { GoogleLogin } from "@react-oauth/google";
 import axios from "../../routes/axios";
+import "../../styles/doctorLoginCss.css";
 
 function PatientLogin() {
   // State for handling input fields and messages
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
@@ -15,10 +16,10 @@ function PatientLogin() {
   const handleLogin = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setMessage("");
+    setError("");
 
     if (!email.trim() || !password.trim()) {
-      setMessage("Email and password cannot be empty.");
+      setError("Email and password cannot be empty.");
       setLoading(false);
       return;
     }
@@ -38,8 +39,6 @@ function PatientLogin() {
           localStorage.removeItem("kyc_notification");
         }
 
-        setMessage("Login successful! Redirecting...");
-
         // Fetch user role and navigate
         const userRes = await axios.get("/me/");
         navigate(
@@ -49,7 +48,7 @@ function PatientLogin() {
         );
       }
     } catch (error) {
-      setMessage(
+      setError(
         error.response?.data?.detail ||
           "Something went wrong. Please try again."
       );
@@ -80,7 +79,7 @@ function PatientLogin() {
 
       navigate("/patient/dashboard");
     } catch (error) {
-      setMessage("Google Sign-In failed. Please try again.");
+      setError("Google Sign-In failed. Please try again.");
     }
   };
 
@@ -97,7 +96,9 @@ function PatientLogin() {
                 <div className="mb-3">
                   <input
                     type="email"
-                    className="form-control form-control-lg"
+                    className={`form-control form-control-lg ${
+                      error ? "is-invalid" : ""
+                    }`}
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="Email"
@@ -108,24 +109,28 @@ function PatientLogin() {
                 <div className="mb-3">
                   <input
                     type="password"
-                    className="form-control form-control-lg"
+                    className={`form-control form-control-lg ${
+                      error ? "is-invalid" : ""
+                    }`}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="Password"
                     required
                   />
+                  {error && <div className="invalid-feedback">{error}</div>}
                 </div>
 
-                {/* Display error or success message */}
-                {message && <div className="alert alert-danger">{message}</div>}
-
-                <div className="d-grid gap-2 mb-4">
+                <div className="d-grid gap-2 mb-3">
                   <button
                     type="submit"
                     className="btn btn-primary btn-lg"
-                    disabled={loading || !email || !password}
+                    disabled={loading}
                   >
-                    {loading ? "Logging in..." : "Login"}
+                    {loading ? (
+                      <span className="spinner-border spinner-border-sm"></span>
+                    ) : (
+                      "Login"
+                    )}
                   </button>
                 </div>
               </form>
@@ -135,7 +140,7 @@ function PatientLogin() {
                 <p>Or sign in with Google:</p>
                 <GoogleLogin
                   onSuccess={handleGoogleSuccess}
-                  onError={() => setMessage("Google Sign-In failed.")}
+                  onError={() => setError("Google Sign-In failed.")}
                 />
               </div>
 

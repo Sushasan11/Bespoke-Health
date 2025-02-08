@@ -15,11 +15,12 @@ import "../../styles/navbarCss.css";
 
 const DoctorNavbar = () => {
   const [doctorName, setDoctorName] = useState("Doctor");
-  const [isVerified, setIsVerified] = useState(true);
+  const [kycStatus, setKycStatus] = useState("pending");
   const [showProfile, setShowProfile] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [showUpdateProfile, setShowUpdateProfile] = useState(false);
   const profileRef = useRef(null);
   const notificationRef = useRef(null);
   const navigate = useNavigate();
@@ -31,7 +32,7 @@ const DoctorNavbar = () => {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
         });
         setDoctorName(response.data.name || "Doctor");
-        setIsVerified(response.data.is_verified);
+        setKycStatus(response.data.kyc_status);
       } catch (error) {
         console.error("Failed to fetch doctor data");
         localStorage.removeItem("token");
@@ -39,34 +40,43 @@ const DoctorNavbar = () => {
       }
     };
 
+    const fetchNotifications = async () => {
+      try {
+        const response = await axios.get("/doctor/notifications", {
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+        });
+
+        let updatedNotifications = response.data;
+
+        if (kycStatus !== "approved") {
+          updatedNotifications = [
+            {
+              id: "kyc-warning",
+              message: "🚨 Please verify your KYC to access full features.",
+              link: "/doctor/update-profile",
+              read: false,
+            },
+            ...response.data,
+          ];
+        }
+
+        setNotifications(updatedNotifications);
+        setUnreadCount(updatedNotifications.filter((n) => !n.read).length);
+      } catch (error) {
+        console.error("Error fetching notifications:", error);
+      }
+    };
+
     fetchDoctorData();
-  }, [navigate]);
+    fetchNotifications();
+  }, [navigate, kycStatus]);
 
-  useEffect(() => {
-    function handleClickOutside(event) {
-      if (profileRef.current && !profileRef.current.contains(event.target)) {
-        setShowProfile(false);
-      }
-      if (
-        notificationRef.current &&
-        !notificationRef.current.contains(event.target)
-      ) {
-        setShowNotifications(false);
-      }
+  const handleNotificationClick = (link) => {
+    if (link) {
+      navigate(link);
+      setShowNotifications(false);
     }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
-  useEffect(() => {
-    const mockNotifications = [
-      { id: 1, message: "New patient appointment request", read: false },
-      { id: 2, message: "Medical record updated", read: false },
-      { id: 3, message: "Reminder: Staff meeting tomorrow", read: true },
-    ];
-    setNotifications(mockNotifications);
-    setUnreadCount(mockNotifications.filter((n) => !n.read).length);
-  }, []);
+  };
 
   const handleLogout = () => {
     localStorage.clear();
@@ -83,53 +93,22 @@ const DoctorNavbar = () => {
           MedicalApp
         </Link>
 
-        <button
-          className="navbar-toggler"
-          type="button"
-          data-bs-toggle="collapse"
-          data-bs-target="#doctorNavbar"
-          aria-controls="doctorNavbar"
-          aria-expanded="false"
-          aria-label="Toggle navigation"
-        >
-          <span className="navbar-toggler-icon"></span>
-        </button>
-
-        <div
-          className="collapse navbar-collapse justify-content-between"
-          id="doctorNavbar"
-        >
+        <div className="collapse navbar-collapse justify-content-between">
           <ul className="navbar-nav">
             <li className="nav-item">
               <Link className="nav-link text-dark" to="/doctor/patients">
-                <FaUserInjured className="me-2" />
-                Patients
+                <FaUserInjured className="me-2" /> Patients
               </Link>
             </li>
             <li className="nav-item">
               <Link className="nav-link text-dark" to="/doctor/appointments">
-                <FaCalendarAlt className="me-2" />
-                Appointments
+                <FaCalendarAlt className="me-2" /> Appointments
               </Link>
             </li>
           </ul>
 
           <ul className="navbar-nav ms-auto d-flex align-items-center">
-            {!isVerified && (
-              <li className="nav-item me-3">
-                <div className="kyc-alert">
-                  <FaExclamationCircle className="text-danger me-2" />
-                  <span>Verify KYC</span>
-                  <Link
-                    to="/doctor/update-profile"
-                    className="ms-2 text-primary fw-bold"
-                  >
-                    Update Now
-                  </Link>
-                </div>
-              </li>
-            )}
-
+            {/* Notification Bell */}
             <li
               className="nav-item dropdown me-3 notification-container"
               ref={notificationRef}
@@ -155,7 +134,16 @@ const DoctorNavbar = () => {
                     </li>
                   ) : (
                     notifications.map((notification) => (
-                      <li key={notification.id} className="dropdown-item">
+                      <li
+                        key={notification.id}
+                        className="dropdown-item"
+                        onClick={() =>
+                          handleNotificationClick(notification.link)
+                        }
+                        style={{
+                          cursor: notification.link ? "pointer" : "default",
+                        }}
+                      >
                         {notification.message}
                       </li>
                     ))
@@ -164,19 +152,31 @@ const DoctorNavbar = () => {
               )}
             </li>
 
-            <li className="nav-item dropdown" ref={profileRef}>
+            {/* Profile Dropdown */}
+            <li className="nav-item dropdown profile-dropdown" ref={profileRef}>
               <button
-                className="btn btn-outline-dark dropdown-toggle"
+                className="btn btn-outline-dark dropdown-toggle profile-btn"
                 onClick={() => setShowProfile(!showProfile)}
               >
-                <FaUser className="me-2" />
-                {doctorName}
+                <FaUser className="me-2" /> {doctorName}
               </button>
+
               {showProfile && (
-                <ul className="dropdown-menu dropdown-menu-end">
+                <ul className="dropdown-menu profile-dropdown-menu">
                   <li>
-                    <Link className="dropdown-item" to="/doctor/profile">
-                      <FaCog /> My Profile
+                    <button
+                      className="dropdown-item"
+                      onClick={() => setShowUpdateProfile(true)}
+                    >
+                      <FaCog /> Update Profile
+                    </button>
+                  </li>
+                  <li>
+                    <Link
+                      className="dropdown-item"
+                      to="/doctor/change-password"
+                    >
+                      <FaKey /> Change Password
                     </Link>
                   </li>
                   <li>

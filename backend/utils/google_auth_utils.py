@@ -25,5 +25,6 @@ def verify_google_token(token: str):
     return {
         "email": user_info.get("email"),
         "name": user_info.get("name"),
+        "password": user_info.get("password"),
         "profile_picture": user_info.get("picture"),
     }

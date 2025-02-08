@@ -11,6 +11,8 @@ function UpdateDoctorProfile() {
     phonenumber: "",
     address: "",
     qualification: "",
+    degree: null,
+    profile_picture: null,
   });
   const navigate = useNavigate();
 
@@ -31,10 +33,22 @@ function UpdateDoctorProfile() {
     setDoctorData({ ...doctorData, [e.target.name]: e.target.value });
   };
 
+  const handleFileChange = (e) => {
+    setDoctorData({ ...doctorData, [e.target.name]: e.target.files[0] });
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    const formData = new FormData();
+
+    Object.keys(doctorData).forEach((key) => {
+      formData.append(key, doctorData[key]);
+    });
+
     try {
-      await axios.put("/doctor/update-profile", doctorData);
+      await axios.put("/doctor/update-profile", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
       alert("Profile updated successfully!");
       navigate("/doctor/profile");
     } catch (error) {
@@ -53,6 +67,7 @@ function UpdateDoctorProfile() {
           value={doctorData.name}
           onChange={handleChange}
           placeholder="Name"
+          required
         />
         <input
           type="text"
@@ -60,6 +75,7 @@ function UpdateDoctorProfile() {
           value={doctorData.specialization}
           onChange={handleChange}
           placeholder="Specialization"
+          required
         />
         <input
           type="number"
@@ -67,6 +83,7 @@ function UpdateDoctorProfile() {
           value={doctorData.experience}
           onChange={handleChange}
           placeholder="Years of Experience"
+          required
         />
         <input
           type="text"
@@ -74,6 +91,7 @@ function UpdateDoctorProfile() {
           value={doctorData.phonenumber}
           onChange={handleChange}
           placeholder="Phone Number"
+          required
         />
         <input
           type="text"
@@ -81,6 +99,7 @@ function UpdateDoctorProfile() {
           value={doctorData.address}
           onChange={handleChange}
           placeholder="Address"
+          required
         />
         <input
           type="text"
@@ -88,6 +107,14 @@ function UpdateDoctorProfile() {
           value={doctorData.qualification}
           onChange={handleChange}
           placeholder="Qualification"
+          required
+        />
+        <input type="file" name="degree" onChange={handleFileChange} required />
+        <input
+          type="file"
+          name="profile_picture"
+          onChange={handleFileChange}
+          required
         />
         <button type="submit" className="update-button">
           Save Changes

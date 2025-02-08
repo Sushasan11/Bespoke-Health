@@ -6,6 +6,7 @@ import "../../styles/doctorProfileCSS.css";
 function DoctorProfile() {
   const [doctor, setDoctor] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [showUpdate, setShowUpdate] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -63,12 +64,18 @@ function DoctorProfile() {
         <strong>Email:</strong> {doctor?.email}
       </p>
 
-      <button
-        onClick={() => navigate("/doctor/update-profile")}
-        className="update-button"
-      >
+      <button onClick={() => setShowUpdate(true)} className="update-button">
         Update Profile
       </button>
+
+      {showUpdate && (
+        <div className="update-modal">
+          <h3>Update Profile</h3>
+          <input type="text" placeholder="New Name" />
+          <input type="text" placeholder="Specialization" />
+          <button onClick={() => setShowUpdate(false)}>Save</button>
+        </div>
+      )}
     </div>
   );
 }

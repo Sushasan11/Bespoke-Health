@@ -26,12 +26,11 @@ import DoctorHome from "./views/doctorHome";
 import DoctorNavbar from "./components/navbar/doctorNavbar";
 import DoctorProfile from "./components/profile/doctorProfile";
 import UpdateDoctorProfile from "./components/profile/updateDoctorProfile";
+import DoctorChangePassword from "./components/profile/doctorchangePassword";
 
-// 🔹 Protected Route for Patients
+// Protected Route for Patients
 const ProtectedRoutePatient = ({ children }) => {
-  const [isAuthenticated, setIsAuthenticated] = useState(
-    !!localStorage.getItem("token")
-  );
+  const [isAuthenticated, setIsAuthenticated] = useState(null);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -39,34 +38,39 @@ const ProtectedRoutePatient = ({ children }) => {
   }, []);
 
   if (isAuthenticated === null) {
-    return <p>Loading...</p>;
+    return <div className="loading text-center">Loading...</div>;
   }
 
-  return isAuthenticated ? children : <Navigate to="/login/" />;
+  return isAuthenticated ? children : <Navigate to="/login/" replace />;
 };
 
-// 🔹 Protected Route for Doctors (Includes KYC Check)
+// Protected Route for Doctors (Includes KYC Check)
 const ProtectedRouteDoctor = ({ children }) => {
-  const [isAuthenticated, setIsAuthenticated] = useState(
-    !!localStorage.getItem("token")
-  );
-
-  const [isVerified, setIsVerified] = useState(
-    localStorage.getItem("is_verified") === "true"
-  );
+  const [authData, setAuthData] = useState({
+    isAuthenticated: null,
+    isVerified: null,
+  });
 
   useEffect(() => {
     const token = localStorage.getItem("token");
-    setIsAuthenticated(!!token);
-    setIsVerified(localStorage.getItem("is_verified") === "true");
+    const kycStatus = localStorage.getItem("kyc_status");
+
+    setAuthData({
+      isAuthenticated: !!token,
+      isVerified: kycStatus === "approved",
+    });
   }, []);
 
-  if (isAuthenticated === null) {
-    return <p>Loading...</p>;
+  if (authData.isAuthenticated === null || authData.isVerified === null) {
+    return <div className="loading text-center">Loading...</div>;
   }
 
-  if (!isAuthenticated) {
-    return <Navigate to="/login/doctor" />;
+  if (!authData.isAuthenticated) {
+    return <Navigate to="/login/doctor" replace />;
+  }
+
+  if (!authData.isVerified) {
+    return <Navigate to="/doctor/kyc-warning" replace />;
   }
 
   return children;
@@ -95,7 +99,6 @@ function App() {
           path="/patient/dashboard"
           element={
             <ProtectedRoutePatient>
-              <PatientNavbar />
               <PatientHome />
             </ProtectedRoutePatient>
           }
@@ -104,7 +107,6 @@ function App() {
           path="/update-profile"
           element={
             <ProtectedRoutePatient>
-              <PatientNavbar />
               <UpdateProfile />
             </ProtectedRoutePatient>
           }
@@ -113,7 +115,6 @@ function App() {
           path="/change-password"
           element={
             <ProtectedRoutePatient>
-              <PatientNavbar />
               <ChangePassword />
             </ProtectedRoutePatient>
           }
@@ -124,7 +125,6 @@ function App() {
           path="/doctor/dashboard"
           element={
             <ProtectedRouteDoctor>
-              <DoctorNavbar />
               <DoctorHome />
             </ProtectedRouteDoctor>
           }
@@ -133,7 +133,6 @@ function App() {
           path="/doctor/profile"
           element={
             <ProtectedRouteDoctor>
-              <DoctorNavbar />
               <DoctorProfile />
             </ProtectedRouteDoctor>
           }
@@ -142,8 +141,15 @@ function App() {
           path="/doctor/update-profile"
           element={
             <ProtectedRouteDoctor>
-              <DoctorNavbar />
               <UpdateDoctorProfile />
+            </ProtectedRouteDoctor>
+          }
+        />
+        <Route
+          path="/doctor/change-password"
+          element={
+            <ProtectedRouteDoctor>
+              <DoctorChangePassword />
             </ProtectedRouteDoctor>
           }
         />
@@ -152,16 +158,20 @@ function App() {
         <Route
           path="/doctor/kyc-warning"
           element={
-            <div className="kyc-warning">
-              <h2>🚨 KYC Pending</h2>
-              <p>Please complete your KYC verification to access features.</p>
-              <a href="/doctor/update-profile">Update KYC</a>
+            <div className="kyc-warning text-center">
+              <h2 className="text-danger">KYC Pending</h2>
+              <p className="lead">
+                Please complete your KYC verification to access features.
+              </p>
+              <a href="/doctor/update-profile" className="btn btn-primary">
+                Update KYC
+              </a>
             </div>
           }
         />
 
         {/* Catch-All 404 Redirect */}
-        <Route path="*" element={<Navigate to="/" />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Router>
   );

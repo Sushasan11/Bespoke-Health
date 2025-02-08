@@ -24,13 +24,6 @@ logs/
 # Ignore Alembic migrations (optional)
 alembic/versions/
 
-# Ignore editor settings
-.vscode/
-.idea/
-*.swp
-*.swo
-*.swn
-
 # Ignore build artifacts
 dist/
 build/

@@ -1,9 +1,0 @@
-@media (max-width: 576px) {
-  .otp-page .card {
-    margin: 0 15px;
-  }
-
-  .otp-page .card-body {
-    padding: 1.5rem;
-  }
-}

@@ -1,0 +1,16 @@
+{
+    "postman.settings.dotenv-detection-notification-visibility": false,
+    "sqltools.connections": [
+        {
+            "previewLimit": 50,
+            "server": "localhost",
+            "port": 5432,
+            "driver": "PostgreSQL",
+            "name": "t1",
+            "database": "health",
+            "username": "postgres",
+            "password": "admin",
+            "connectionTimeout": 30
+        }
+    ]
+}

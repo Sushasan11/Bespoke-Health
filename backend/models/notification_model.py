@@ -1,4 +1,5 @@
-from sqlalchemy import Column, Integer, String, Boolean, ForeignKey
+from sqlalchemy import Column, Integer, String, ForeignKey
+from sqlalchemy.orm import relationship
 from database.database import Base
 
 
@@ -6,6 +7,10 @@ class Notification(Base):
     __tablename__ = "notifications"
 
     id = Column(Integer, primary_key=True, index=True)
-    doctor_id = Column(Integer, ForeignKey("doctor.id"))
     message = Column(String, nullable=False)
-    read = Column(Boolean, default=False)
+    admin_id = Column(
+        Integer, ForeignKey("admins.id", ondelete="CASCADE"), nullable=False
+    )
+
+    # Relationship with Admin (Fix)
+    admin = relationship("Admin", back_populates="notifications")

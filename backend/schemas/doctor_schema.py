@@ -2,34 +2,58 @@ from pydantic import BaseModel, EmailStr, Field
 from typing import Optional
 
 
-# Schema for doctor signup (without file uploads)
-class DoctorSignup(BaseModel):
+class DoctorSignupSchema(BaseModel):
     email: EmailStr
     password: str = Field(..., min_length=8)
     name: str
-    specialization: str
+    department_id: int
     experience: int
     phonenumber: str
     address: str
     qualification: str
 
 
-# Schema for doctor login
-class DoctorLogin(BaseModel):
+class DoctorSignupForm(BaseModel):
+    email: EmailStr
+    password: str = Field(..., min_length=8)
+    name: str
+    department_id: int
+    experience: int
+    phonenumber: str
+    address: str
+    qualification: str
+
+
+class DoctorLoginSchema(BaseModel):
     email: EmailStr
     password: str = Field(..., min_length=8)
 
 
-# Schema for updating KYC details
-class DoctorKYCUpdate(BaseModel):
-    name: Optional[str] = None
-    specialization: Optional[str] = None
-    experience: Optional[int] = None
-    phonenumber: Optional[str] = None
-    address: Optional[str] = None
-    qualification: Optional[str] = None
+class DoctorProfileSchema(BaseModel):
+    id: int
+    user_id: int
+    email: EmailStr
+    name: str
+    department_id: Optional[int]
+    experience: int
+    phonenumber: str
+    address: str
+    qualification: str
+    profile_picture_url: Optional[str]
+    degree_certificate_url: Optional[str]
+    kyc_status: str
+
+    class Config:
+        orm_mode = True
 
 
-# Schema for admin KYC approval
-class KYCApprovalSchema(BaseModel):
-    status: str
+class DoctorUpdateSchema(BaseModel):
+    name: Optional[str]
+    department_id: Optional[int]
+    experience: Optional[int]
+    phonenumber: Optional[str]
+    address: Optional[str]
+    qualification: Optional[str]
+
+    class Config:
+        from_attributes = True

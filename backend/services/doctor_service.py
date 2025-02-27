@@ -1,140 +1,95 @@
+import os
 from sqlalchemy.orm import Session
-from fastapi import HTTPException, UploadFile
-from schemas.doctor_schema import DoctorLogin
-from repositories.doctor_repository import DoctorRepository
-from utils.password_utils import hash_password, verify_password, create_access_token
-from utils.email_utils import send_email
-from datetime import timedelta
-import logging
+from fastapi import UploadFile, HTTPException
+from models.doctor_model import Doctor
+from models.user_model import User
+from models.department_model import Department
+from schemas.doctor_schema import (
+    DoctorSignupSchema,
+    DoctorUpdateSchema,
+    DoctorSignupForm,
+    DoctorLoginSchema,
+    DoctorProfileSchema,
+)
+from utils.hash_password import hash_password
 
-logging.basicConfig(level=logging.DEBUG)
-logger = logging.getLogger(__name__)
+# Directories for file uploads
+PROFILE_UPLOAD_DIR = "uploads/profile_pictures"
+CERTIFICATE_UPLOAD_DIR = "uploads/degree_certificates"
+
+os.makedirs(PROFILE_UPLOAD_DIR, exist_ok=True)
+os.makedirs(CERTIFICATE_UPLOAD_DIR, exist_ok=True)
 
 
-class DoctorService:
-    @staticmethod
-    async def signup(
-        email: str,
-        password: str,
-        name: str,
-        specialization: str,
-        experience: int,
-        phonenumber: str,
-        address: str,
-        qualification: str,
-        profile_picture: UploadFile,
-        degree: UploadFile,
-        db: Session,
-    ):
-        # Registers a new doctor and saves profile picture & degree as binary data
-        if DoctorRepository.get_by_email(db, email):
-            raise HTTPException(status_code=400, detail="Email already registered")
+def save_uploaded_file(upload_dir: str, file: UploadFile) -> str:
+    # Saves uploaded file and returns the file path
+    file_path = os.path.join(upload_dir, file.filename)
+    with open(file_path, "wb") as f:
+        f.write(file.file.read())
+    return file_path
 
-        hashed_password = hash_password(password)
 
-        # Read files as binary
-        degree_binary = await degree.read()
-        profile_picture_binary = await profile_picture.read()
+async def register_doctor(
+    db: Session,
+    doctor_data: DoctorSignupSchema,
+    profile_picture: UploadFile,
+    degree_certificate: UploadFile,
+):
+    # Check if a user with this email already exists
+    existing_user = db.query(User).filter(User.email == doctor_data.email).first()
+    if existing_user:
+        raise HTTPException(status_code=400, detail="Email already registered.")
 
-        new_doctor = DoctorRepository.create_doctor(
-            db,
-            email,
-            hashed_password,
-            name,
-            specialization,
-            experience,
-            phonenumber,
-            address,
-            qualification,
-            degree_binary,
-            profile_picture_binary,
-        )
+    hashed_password = hash_password(doctor_data.password)
 
-        # Send email notification
-        send_email(
-            email,
-            "KYC Verification in Progress",
-            "KYC Verification in Progress",
-            """
-            <html>
-            <body style="background-color:#f4f4f4; padding:20px; font-family:Arial, sans-serif;">
-                <div style="max-width:600px; margin:auto; background:#ffffff; padding:20px; border-radius:10px; box-shadow:0px 0px 10px rgba(0,0,0,0.1);">
-                    <h2 style="color:#007bff; text-align:center;">KYC Verification in Progress</h2>
-                    <p style="color:#333; font-size:16px; text-align:center;">
-                        Thank you for submitting your KYC details. Our team is reviewing your documents.
-                    </p>
-                    <div style="text-align:center; margin:20px 0;">
-                        <img src="https://cdn-icons-png.flaticon.com/512/190/190411.png" width="80" height="80">
-                    </div>
-                    <p style="color:#555; font-size:14px; text-align:center;">
-                        This process may take some time. Once your verification is complete, you will receive a confirmation email.
-                    </p>
-                    <div style="text-align:center; margin-top:20px;">
-                        <a href="http://localhost:5173/login/doctor" style="background-color:#007bff; color:#ffffff; padding:10px 20px; text-decoration:none; border-radius:5px; display:inline-block;">
-                            Login to Your Account
-                        </a>
-                    </div>
-                    <p style="color:#888; font-size:12px; text-align:center; margin-top:20px;">
-                        If you have any questions, please contact our support team.
-                    </p>
-                </div>
-            </body>
-            </html>
-            """,
-        )
+    # Create the user record for the doctor
+    new_user = User(email=doctor_data.email, password=hashed_password, role="doctor")
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
 
-        return new_doctor
+    # Save uploaded files
+    profile_picture_path = save_uploaded_file(PROFILE_UPLOAD_DIR, profile_picture)
+    degree_certificate_path = save_uploaded_file(
+        CERTIFICATE_UPLOAD_DIR, degree_certificate
+    )
 
-    @staticmethod
-    async def update_kyc(
-        name: str = None,
-        specialization: str = None,
-        experience: int = None,
-        phonenumber: str = None,
-        address: str = None,
-        qualification: str = None,
-        profile_picture: UploadFile = None,
-        degree: UploadFile = None,
-        doctor_id: int = None,
-        db: Session = None,
-    ):
-        # Updates doctor KYC details, including profile picture and degree
-        doctor = DoctorRepository.get_by_id(db, doctor_id)
-        if not doctor:
-            raise HTTPException(status_code=404, detail="Doctor not found")
+    # Create the doctor record and explicitly set kyc_status to "pending"
+    new_doctor = Doctor(
+        user_id=new_user.id,
+        email=doctor_data.email,
+        name=doctor_data.name,
+        department_id=doctor_data.department_id,
+        experience=doctor_data.experience,
+        phonenumber=doctor_data.phonenumber,
+        address=doctor_data.address,
+        qualification=doctor_data.qualification,
+        profile_picture_url=profile_picture_path,
+        degree_certificate_url=degree_certificate_path,
+        kyc_status="pending",  # Explicitly set kyc_status
+    )
 
-        profile_picture_binary = (
-            await profile_picture.read() if profile_picture else doctor.profilepicture
-        )
-        degree_binary = await degree.read() if degree else doctor.degree
+    db.add(new_doctor)
+    db.commit()
+    db.refresh(new_doctor)
 
-        return DoctorRepository.update_kyc(
-            db,
-            doctor_id,
-            name,
-            specialization,
-            experience,
-            phonenumber,
-            address,
-            qualification,
-            degree_binary,
-            profile_picture_binary,
-        )
+    return {
+        "id": new_doctor.id,
+        "email": new_doctor.email,
+        "user_id": new_doctor.user_id,
+        "profile_picture_url": new_doctor.profile_picture_url,
+        "degree_certificate_url": new_doctor.degree_certificate_url,
+    }
 
-    @staticmethod
-    def login(doctor: DoctorLogin, db: Session):
-        # Handles doctor login and returns a JWT token
-        doctor_obj = DoctorRepository.get_by_email(db, doctor.email)
 
-        if not doctor_obj or not verify_password(doctor.password, doctor_obj.password):
-            raise HTTPException(status_code=401, detail="Invalid credentials")
-
-        access_token = create_access_token(
-            data={"sub": doctor.email}, expires_delta=timedelta(hours=12)
-        )
-
-        return {
-            "access_token": access_token,
-            "token_type": "bearer",
-            "kyc_status": doctor_obj.kyc_status,
-        }
+def update_doctor_profile(doctor: Doctor, update_data: DoctorUpdateSchema, db: Session):
+    try:
+        update_fields = update_data.dict(exclude_unset=True)
+        for field, value in update_fields.items():
+            setattr(doctor, field, value)
+        db.commit()
+        db.refresh(doctor)
+        return doctor
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=str(e))

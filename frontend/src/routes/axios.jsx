@@ -1,20 +1,32 @@
 import axios from "axios";
 
-const instance = axios.create({
+const api = axios.create({
   baseURL: "http://127.0.0.1:8000",
   timeout: 15000,
   headers: {
     "Content-Type": "application/json",
   },
+  withCredentials: true,
 });
 
-// Automatically attach JWT token to requests
-instance.interceptors.request.use((config) => {
-  const token = localStorage.getItem("token");
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
+// Interceptors for logging requests and responses
+api.interceptors.request.use(
+  (config) => {
+    console.log("[Axios] Request Sent:", config);
+    return config;
+  },
+  (error) => {
+    console.error("[Axios] Request Error:", error);
+    return Promise.reject(error);
   }
-  return config;
-});
+);
 
-export default instance;
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    console.error("[Axios] API Error:", error.response || error);
+    return Promise.reject(error);
+  }
+);
+
+export default api;

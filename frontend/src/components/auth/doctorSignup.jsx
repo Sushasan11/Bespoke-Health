@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { ToastContainer, toast } from "react-toastify";
 import api from "../../routes/axios";
-import "react-toastify/dist/ReactToastify.css";
 
 function DoctorSignup() {
   const navigate = useNavigate();
@@ -26,10 +25,8 @@ function DoctorSignup() {
     const fetchDepartments = async () => {
       try {
         const res = await api.get("/departments");
-        // Assuming the API returns an array of departments
         setDepartments(res.data);
       } catch (error) {
-        console.error("Error fetching departments:", error);
         toast.error("Failed to load departments.");
       }
     };
@@ -45,11 +42,11 @@ function DoctorSignup() {
   };
 
   const handleFileChange = (e) => {
-    const { name } = e.target;
+    const { name, files } = e.target;
     if (name === "profile_picture") {
-      setProfilePicture(e.target.files[0]);
+      setProfilePicture(files[0]);
     } else if (name === "degree_certificate") {
-      setDegreeCertificate(e.target.files[0]);
+      setDegreeCertificate(files[0]);
     }
   };
 
@@ -58,39 +55,30 @@ function DoctorSignup() {
     setLoading(true);
     try {
       const data = new FormData();
-      data.append("email", formData.email);
-      data.append("password", formData.password);
-      data.append("name", formData.name);
-      data.append("department_id", formData.department_id);
-      data.append("experience", formData.experience);
-      data.append("phonenumber", formData.phonenumber);
-      data.append("address", formData.address);
-      data.append("qualification", formData.qualification);
-
-      if (profilePicture) {
-        data.append("profile_picture", profilePicture);
-      }
-      if (degreeCertificate) {
+      Object.keys(formData).forEach((key) => {
+        data.append(key, formData[key]);
+      });
+      if (profilePicture) data.append("profile_picture", profilePicture);
+      if (degreeCertificate)
         data.append("degree_certificate", degreeCertificate);
-      }
 
       await api.post("/doctor/signup", data, {
         headers: { "Content-Type": "multipart/form-data" },
       });
-      toast.success("Signup successful! Please log in.");
-      navigate("/doctor/login");
+      toast.success("Signup successful! Redirecting to login...");
+      setTimeout(() => navigate("/doctor/login"), 3000);
     } catch (error) {
-      const errorMsg =
-        error.response?.data?.detail || "An error occurred. Please try again.";
-      toast.error(errorMsg);
+      toast.error(
+        error.response?.data?.detail || "An error occurred. Please try again."
+      );
     }
     setLoading(false);
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100 p-4">
-      <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-3xl border border-gray-300">
-        <h2 className="text-3xl font-bold mb-8 text-center text-gray-800">
+    <div className="min-h-screen flex items-center justify-center bg-[#F4F6F6] p-6">
+      <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-3xl">
+        <h2 className="text-3xl font-bold text-center text-[#6A0572] mb-6">
           Doctor Signup
         </h2>
         <form
@@ -98,33 +86,29 @@ function DoctorSignup() {
           encType="multipart/form-data"
           className="space-y-6"
         >
-          {/* First Row: Email & Password */}
+          {/* Email & Password */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label htmlFor="email" className="block text-gray-700 mb-1">
-                Email
-              </label>
+              <label className="block text-[#333333] font-medium">Email</label>
               <input
                 type="email"
-                id="email"
                 name="email"
                 placeholder="doctor@example.com"
-                className="w-full px-4 py-2 border rounded focus:outline-none focus:ring focus:border-blue-300"
+                className="w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-[#6A0572] outline-none"
                 value={formData.email}
                 onChange={handleInputChange}
                 required
               />
             </div>
             <div>
-              <label htmlFor="password" className="block text-gray-700 mb-1">
+              <label className="block text-[#333333] font-medium">
                 Password
               </label>
               <input
                 type="password"
-                id="password"
                 name="password"
                 placeholder="••••••••"
-                className="w-full px-4 py-2 border rounded focus:outline-none focus:ring focus:border-blue-300"
+                className="w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-[#6A0572] outline-none"
                 value={formData.password}
                 onChange={handleInputChange}
                 required
@@ -132,36 +116,29 @@ function DoctorSignup() {
             </div>
           </div>
 
-          {/* Second Row: Name & Department Dropdown */}
+          {/* Name & Department */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label htmlFor="name" className="block text-gray-700 mb-1">
-                Name
-              </label>
+              <label className="block text-[#333333] font-medium">Name</label>
               <input
                 type="text"
-                id="name"
                 name="name"
-                placeholder="Dr. John Doe"
-                className="w-full px-4 py-2 border rounded focus:outline-none focus:ring focus:border-blue-300"
+                placeholder="Dr. Ram Shah"
+                className="w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-[#6A0572] outline-none"
                 value={formData.name}
                 onChange={handleInputChange}
                 required
               />
             </div>
             <div>
-              <label
-                htmlFor="department_id"
-                className="block text-gray-700 mb-1"
-              >
+              <label className="block text-[#333333] font-medium">
                 Department
               </label>
               <select
-                id="department_id"
                 name="department_id"
+                className="w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-[#6A0572] outline-none"
                 value={formData.department_id}
                 onChange={handleInputChange}
-                className="w-full px-4 py-2 border rounded focus:outline-none focus:ring focus:border-blue-300"
                 required
               >
                 <option value="" disabled>
@@ -176,33 +153,31 @@ function DoctorSignup() {
             </div>
           </div>
 
-          {/* Third Row: Experience & Phone Number */}
+          {/* Experience & Phone Number */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label htmlFor="experience" className="block text-gray-700 mb-1">
+              <label className="block text-[#333333] font-medium">
                 Experience (years)
               </label>
               <input
                 type="number"
-                id="experience"
                 name="experience"
                 placeholder="5"
-                className="w-full px-4 py-2 border rounded focus:outline-none focus:ring focus:border-blue-300"
+                className="w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-[#6A0572] outline-none"
                 value={formData.experience}
                 onChange={handleInputChange}
                 required
               />
             </div>
             <div>
-              <label htmlFor="phonenumber" className="block text-gray-700 mb-1">
+              <label className="block text-[#333333] font-medium">
                 Phone Number
               </label>
               <input
                 type="text"
-                id="phonenumber"
                 name="phonenumber"
-                placeholder="(555) 123-4567"
-                className="w-full px-4 py-2 border rounded focus:outline-none focus:ring focus:border-blue-300"
+                placeholder="+977 9812345678"
+                className="w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-[#6A0572] outline-none"
                 value={formData.phonenumber}
                 onChange={handleInputChange}
                 required
@@ -210,36 +185,31 @@ function DoctorSignup() {
             </div>
           </div>
 
-          {/* Fourth Row: Address & Qualification */}
+          {/* Address & Qualification */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label htmlFor="address" className="block text-gray-700 mb-1">
+              <label className="block text-[#333333] font-medium">
                 Address
               </label>
               <input
                 type="text"
-                id="address"
                 name="address"
-                placeholder="123 Medical Lane"
-                className="w-full px-4 py-2 border rounded focus:outline-none focus:ring focus:border-blue-300"
+                placeholder="Kathmandu, Nepal"
+                className="w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-[#6A0572] outline-none"
                 value={formData.address}
                 onChange={handleInputChange}
                 required
               />
             </div>
             <div>
-              <label
-                htmlFor="qualification"
-                className="block text-gray-700 mb-1"
-              >
+              <label className="block text-[#333333] font-medium">
                 Qualification
               </label>
               <input
                 type="text"
-                id="qualification"
                 name="qualification"
-                placeholder="MD, MBBS, etc."
-                className="w-full px-4 py-2 border rounded focus:outline-none focus:ring focus:border-blue-300"
+                placeholder="MD, MBBS"
+                className="w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-[#6A0572] outline-none"
                 value={formData.qualification}
                 onChange={handleInputChange}
                 required
@@ -247,49 +217,76 @@ function DoctorSignup() {
             </div>
           </div>
 
-          {/* File Inputs */}
+          {/* File Uploads */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Profile Picture */}
-            <div className="flex items-center gap-4">
-              <label htmlFor="profile_picture" className="text-gray-700">
+            {/* Profile Picture Upload */}
+            <div>
+              <label className="block text-[#333333] font-medium">
                 Profile Picture
               </label>
-              <label
-                htmlFor="profile_picture"
-                className="inline-block px-1 py-0.5 bg-blue-600 text-white rounded cursor-pointer hover:bg-blue-700 focus:ring transition"
-              >
-                {profilePicture ? profilePicture.name : "Browse"}
+              <label className="flex items-center justify-center px-4 py-2 bg-[#007bff] text-white rounded-md cursor-pointer hover:bg-[#0056b3] transition">
+                Browse
+                <input
+                  type="file"
+                  name="profile_picture"
+                  className="hidden"
+                  onChange={handleFileChange}
+                  accept="image/*"
+                  required
+                />
               </label>
-              <input
-                type="file"
-                id="profile_picture"
-                name="profile_picture"
-                className="hidden"
-                onChange={handleFileChange}
-                accept="image/*"
-                required
-              />
+              {/* Show Image Preview if Selected */}
+              {profilePicture && (
+                <div className="mt-2">
+                  <img
+                    src={URL.createObjectURL(profilePicture)}
+                    alt="Profile Preview"
+                    className="w-32 h-32 object-cover rounded-md border border-gray-300"
+                  />
+                </div>
+              )}
             </div>
-            {/* Degree Certificate */}
-            <div className="flex items-center gap-4">
-              <label htmlFor="degree_certificate" className="text-gray-700">
+
+            {/* Degree Certificate Upload */}
+            <div>
+              <label className="block text-[#333333] font-medium">
                 Degree Certificate
               </label>
-              <label
-                htmlFor="degree_certificate"
-                className="inline-block px-1 py-0.5 bg-blue-600 text-white rounded cursor-pointer hover:bg-blue-700 focus:ring transition"
-              >
-                {degreeCertificate ? degreeCertificate.name : "Browse"}
+              <label className="flex items-center justify-center px-4 py-2 bg-[#007bff] text-white rounded-md cursor-pointer hover:bg-[#0056b3] transition">
+                Browse
+                <input
+                  type="file"
+                  name="degree_certificate"
+                  className="hidden"
+                  onChange={handleFileChange}
+                  accept="image/*,application/pdf"
+                  required
+                />
               </label>
-              <input
-                type="file"
-                id="degree_certificate"
-                name="degree_certificate"
-                className="hidden"
-                onChange={handleFileChange}
-                accept="image/*,application/pdf"
-                required
-              />
+
+              {/* Show PDF or Image Preview if Selected */}
+              {degreeCertificate && (
+                <div className="mt-2 flex items-center gap-3 p-2 border border-gray-300 rounded-md bg-gray-100">
+                  {degreeCertificate.type.includes("image") ? (
+                    <img
+                      src={URL.createObjectURL(degreeCertificate)}
+                      alt="Certificate Preview"
+                      className="w-32 h-32 object-cover rounded-md"
+                    />
+                  ) : (
+                    <div className="flex items-center space-x-3">
+                      {/* PDF Icon */}
+                      <div className="w-12 h-12 bg-red-500 text-white flex items-center justify-center rounded-md">
+                        <span className="text-lg font-bold">PDF</span>
+                      </div>
+                      {/* File Name */}
+                      <span className="text-gray-700 text-sm">
+                        {degreeCertificate.name}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
 
@@ -297,7 +294,7 @@ function DoctorSignup() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700 transition mt-6"
+            className="w-full bg-[#866bff] text-white py-2 rounded-md hover:bg-[#FF6B6B]/80 transition-all"
           >
             {loading ? "Signing up..." : "Sign Up"}
           </button>
@@ -306,8 +303,7 @@ function DoctorSignup() {
           Already have an account?{" "}
           <Link
             to="/doctor/login"
-            className="text-green-600 hover:underline"
-            style={{ textDecoration: "none" }}
+            className="text-[#6A0572] hover:underline font-medium"
           >
             Log in here.
           </Link>

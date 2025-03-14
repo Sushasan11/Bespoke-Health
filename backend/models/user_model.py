@@ -11,6 +11,6 @@ class User(Base):
     password = Column(String, nullable=False)
     role = Column(String, nullable=False)
 
-    # Relationship with Patient (Fix)
+    # Relationship with Patient
     patient = relationship("Patient", back_populates="user", uselist=False)
     doctor = relationship("Doctor", back_populates="user", uselist=False)

@@ -2,19 +2,23 @@ import os
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
-import logging
 import traceback
+from dotenv import load_dotenv
 
-# Logging setup
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+# Load environment variables from .env
+load_dotenv()
 
-# SMTP Email Setup
+# Load SMTP Configuration from .env
+SMTP_SERVER = os.getenv("SMTP_SERVER", "smtp.gmail.com")
+SMTP_PORT = int(os.getenv("SMTP_PORT", 587))
 SENDER_EMAIL = os.getenv("SENDER_EMAIL")
 SENDER_PASSWORD = os.getenv("SENDER_PASSWORD")
-SMTP_SERVER = "smtp.gmail.com"
-SMTP_PORT = 587
+SMTP_USE_SSL = os.getenv("SMTP_USE_SSL", "False").lower() == "true"
+SMTP_USE_TLS = (
+    os.getenv("SMTP_USE_TLS", "True").lower() == "true"
+)  # TLS enabled by default
 
+# OTP Expiry Time in minutes
 OTP_EXPIRE_MINUTES = 5
 
 
@@ -32,7 +36,7 @@ def send_otp_email(to_email, subject, otp):
     If you didn't request this, please ignore this email.
 
     Best Regards,
-    Health DOM
+    Bespoke Health
     """
 
     html = f"""
@@ -90,7 +94,7 @@ def send_otp_email(to_email, subject, otp):
             <p>Best Regards,<br>Health DOM</p>
           </div>
           <div class="footer">
-            <p>&copy; 2024 Health DOM. All rights reserved.</p>
+            <p>&copy; 2024 Bespoke Health. All rights reserved.</p>
           </div>
         </div>
       </body>
@@ -157,7 +161,7 @@ def send_notification_email(to_email, subject, body):
             <p>Best Regards,<br>Health DOM</p>
           </div>
           <div class="footer">
-            <p>&copy; 2024 Health DOM. All rights reserved.</p>
+            <p>&copy; 2024 Bespoke Health. All rights reserved.</p>
           </div>
         </div>
       </body>
@@ -181,12 +185,27 @@ def send_email(to_email, subject, text_body, html_body):
     message.attach(html_text)
 
     try:
-        with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
-            server.ehlo()
-            server.starttls()
-            server.login(SENDER_EMAIL, SENDER_PASSWORD)
-            server.sendmail(SENDER_EMAIL, to_email, message.as_string())
-            logger.info(f"Email sent successfully to {to_email}")
+        if SMTP_USE_TLS:
+            print(f"Using TLS for SMTP connection to {SMTP_SERVER}:{SMTP_PORT}")
+            with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
+                server.ehlo()
+                server.starttls()
+                server.ehlo()
+                server.login(SENDER_EMAIL, SENDER_PASSWORD)
+                server.sendmail(SENDER_EMAIL, to_email, message.as_string())
+        elif SMTP_USE_SSL:
+            print(f"Using SSL for SMTP connection to {SMTP_SERVER}:{SMTP_PORT}")
+            with smtplib.SMTP_SSL(SMTP_SERVER, SMTP_PORT) as server:
+                server.login(SENDER_EMAIL, SENDER_PASSWORD)
+                server.sendmail(SENDER_EMAIL, to_email, message.as_string())
+        else:
+            raise ValueError(
+                "SMTP_USE_TLS or SMTP_USE_SSL must be set to True in the .env file."
+            )
+
+        print(f"Email sent successfully to {to_email}")
+    except smtplib.SMTPAuthenticationError as e:
+        print(f"SMTP Authentication Error: {e}")
     except Exception as e:
-        logger.error(f"Error sending email to {to_email}: {e}")
+        print(f"Error sending email to {to_email}: {e}")
         traceback.print_exc()

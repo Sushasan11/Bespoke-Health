@@ -44,7 +44,7 @@ class DoctorProfileSchema(BaseModel):
     kyc_status: str
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class DoctorUpdateSchema(BaseModel):

@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { ToastContainer, toast } from "react-toastify";
+import { motion } from "framer-motion";
 import api from "../../routes/axios";
 import "react-toastify/dist/ReactToastify.css";
 
-function PatientSignup() {
+export default function PatientSignup() {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -15,72 +16,83 @@ function PatientSignup() {
     setLoading(true);
     try {
       await api.post("/patient/signup", { email, password });
-      toast.success("Signup successful! Please log in.");
-      // Delay the redirect so the user can see the toast message.
+      toast.success("Signup successful! Redirecting to login...");
       setTimeout(() => {
         navigate("/patient/login");
       }, 3000);
     } catch (error) {
-      const errorMsg =
+      let errorMsg =
         error.response?.data?.detail || "An error occurred. Please try again.";
+      if (error.message.includes("Network Error")) {
+        errorMsg = "Cannot connect to server. Check your internet.";
+      }
       toast.error(errorMsg);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
+    <motion.div
+      initial={{ opacity: 0, y: 30 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+      className="min-h-screen flex items-center justify-center bg-[#F4F6F6] p-6"
+    >
       <ToastContainer />
-      <div className="bg-white p-8 rounded shadow-md w-full max-w-md">
-        <h2 className="text-2xl font-bold mb-6 text-center">Patient Signup</h2>
-        <form onSubmit={handleSubmit}>
-          <div className="mb-4">
-            <label htmlFor="email" className="block text-gray-700">
+      <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
+        <h2 className="text-2xl font-bold text-center text-[#6A0572] mb-4">
+          Patient Signup
+        </h2>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label htmlFor="email" className="block text-[#333333] font-medium">
               Email
             </label>
             <input
               type="email"
               id="email"
-              className="w-full px-3 py-2 border rounded focus:outline-none focus:ring focus:border-blue-300"
+              className="w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-[#6A0572] outline-none"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
             />
           </div>
-          <div className="mb-6">
-            <label htmlFor="password" className="block text-gray-700">
+          <div>
+            <label
+              htmlFor="password"
+              className="block text-[#333333] font-medium"
+            >
               Password
             </label>
             <input
               type="password"
               id="password"
-              className="w-full px-3 py-2 border rounded focus:outline-none focus:ring focus:border-blue-300"
+              className="w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-[#6A0572] outline-none"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
             />
           </div>
-          <button
+          <motion.button
             type="submit"
             disabled={loading}
-            className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition"
+            whileTap={{ scale: 0.95 }}
+            className="w-full bg-[#5130aa] text-white py-2 rounded-md hover:bg-[#FF6B6B]/80 transition-all"
           >
             {loading ? "Signing up..." : "Sign Up"}
-          </button>
+          </motion.button>
         </form>
         <p className="mt-4 text-center text-sm text-gray-600">
-          Don&apos;t have an account?{" "}
+          Already have an account?{" "}
           <Link
             to="/patient/login"
-            className="text-blue-600 hover:underline"
-            style={{ textDecoration: "none" }}
+            className="text-[#6A0572] hover:underline font-medium"
           >
             Log in here.
           </Link>
         </p>
       </div>
-    </div>
+    </motion.div>
   );
 }
-
-export default PatientSignup;

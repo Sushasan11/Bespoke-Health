@@ -1,10 +1,52 @@
 @import "tailwindcss";
 
-/* Hide scrollbar while keeping scrolling */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  /scrollbar-width: none;
+}
+
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
 }
-.scrollbar-hide {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
+
+.scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: #c0c0c0 #f1f1f1;
+}
+
+.scrollbar-thin::-webkit-scrollbar {
+  width: 6px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: #c0c0c0;
+  border-radius: 10px;
+}
+
+/* Add custom dot styles */
+.custom-dot-list-style {
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+}
+
+.custom-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.7);
+  transition: background-color 0.3s ease;
+}
+
+.custom-dot:hover {
+  background-color: rgba(255, 255, 255, 1);
+}
+.custom-dot-active {
+  background-color: rgba(255, 255, 255, 1);
+}
+.custom-dot-active:hover {
+  background-color: rgba(255, 255, 255, 1);
 }

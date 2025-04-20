@@ -1,7 +1,9 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { ToastContainer, toast } from "react-toastify";
+import { motion } from "framer-motion";
 import api from "../../routes/axios";
+import { generateToken } from "../../context/firebase";
 import "react-toastify/dist/ReactToastify.css";
 
 function DoctorLogin() {
@@ -14,18 +16,38 @@ function DoctorLogin() {
     e.preventDefault();
     setLoading(true);
     try {
-      await api.post("/doctor/login", { email, password });
+      // Send login request to backend
+      const response = await api.post("/doctor/login", { email, password });
       toast.success("Login successful!");
-      navigate("/doctor/dashboard");
+
+      // Store session token in localStorage
+      localStorage.setItem("session_token", response.data.session_token);
+
+      // Firebase token generation and submission
+      try {
+        const token = await generateToken(); // Get FCM token
+        if (token) {
+          await api.post("/doctor/token", { token }); // Send token to the backend
+        }
+      } catch (err) {
+        console.error("FCM token error:", err);
+        toast.error("Failed to save push notification token.");
+      }
+
+      // Redirect to doctor dashboard after successful login
+      setTimeout(() => {
+        navigate("/doctor/dashboard", { replace: true });
+      }, 2000); // 2 seconds delay
     } catch (error) {
       let errorMsg =
         error.response?.data?.detail || "An error occurred. Please try again.";
       if (error.message.includes("Network Error")) {
         errorMsg = "Cannot connect to server. Check your internet.";
       }
-      toast.error(errorMsg);
+      toast.error(errorMsg); // Show error toast
+    } finally {
+      setLoading(false); // Reset loading state
     }
-    setLoading(false);
   };
 
   return (

@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { ToastContainer, toast } from "react-toastify";
 import api from "../../routes/axios";
+import { generateToken } from "../../context/firebase"; // 🔥 Firebase import
+import "react-toastify/dist/ReactToastify.css";
 
 function DoctorSignup() {
   const navigate = useNavigate();
@@ -20,7 +22,6 @@ function DoctorSignup() {
   const [loading, setLoading] = useState(false);
   const [departments, setDepartments] = useState([]);
 
-  // Fetch departments from the API
   useEffect(() => {
     const fetchDepartments = async () => {
       try {
@@ -65,7 +66,19 @@ function DoctorSignup() {
       await api.post("/doctor/signup", data, {
         headers: { "Content-Type": "multipart/form-data" },
       });
+
       toast.success("Signup successful! Redirecting to login...");
+
+      // 🔥 Firebase token logic
+      try {
+        const token = await generateToken();
+        if (token) {
+          await api.post("/doctor/token", { token });
+        }
+      } catch (err) {
+        console.error("FCM token error:", err);
+      }
+
       setTimeout(() => navigate("/doctor/login"), 3000);
     } catch (error) {
       toast.error(
@@ -153,7 +166,7 @@ function DoctorSignup() {
             </div>
           </div>
 
-          {/* Experience & Phone Number */}
+          {/* Experience & Phone */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className="block text-[#333333] font-medium">
@@ -219,7 +232,6 @@ function DoctorSignup() {
 
           {/* File Uploads */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Profile Picture Upload */}
             <div>
               <label className="block text-[#333333] font-medium">
                 Profile Picture
@@ -235,7 +247,6 @@ function DoctorSignup() {
                   required
                 />
               </label>
-              {/* Show Image Preview if Selected */}
               {profilePicture && (
                 <div className="mt-2">
                   <img
@@ -247,7 +258,6 @@ function DoctorSignup() {
               )}
             </div>
 
-            {/* Degree Certificate Upload */}
             <div>
               <label className="block text-[#333333] font-medium">
                 Degree Certificate
@@ -264,7 +274,6 @@ function DoctorSignup() {
                 />
               </label>
 
-              {/* Show PDF or Image Preview if Selected */}
               {degreeCertificate && (
                 <div className="mt-2 flex items-center gap-3 p-2 border border-gray-300 rounded-md bg-gray-100">
                   {degreeCertificate.type.includes("image") ? (
@@ -275,11 +284,9 @@ function DoctorSignup() {
                     />
                   ) : (
                     <div className="flex items-center space-x-3">
-                      {/* PDF Icon */}
                       <div className="w-12 h-12 bg-red-500 text-white flex items-center justify-center rounded-md">
                         <span className="text-lg font-bold">PDF</span>
                       </div>
-                      {/* File Name */}
                       <span className="text-gray-700 text-sm">
                         {degreeCertificate.name}
                       </span>
@@ -290,7 +297,6 @@ function DoctorSignup() {
             </div>
           </div>
 
-          {/* Submit Button */}
           <button
             type="submit"
             disabled={loading}
@@ -308,8 +314,8 @@ function DoctorSignup() {
             Log in here.
           </Link>
         </p>
+        <ToastContainer />
       </div>
-      <ToastContainer />
     </div>
   );
 }

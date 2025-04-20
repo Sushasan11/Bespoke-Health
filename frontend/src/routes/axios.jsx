@@ -9,24 +9,13 @@ const api = axios.create({
   withCredentials: true,
 });
 
-// Interceptors for logging requests and responses
-api.interceptors.request.use(
-  (config) => {
-    console.log("[Axios] Request Sent:", config);
-    return config;
-  },
-  (error) => {
-    console.error("[Axios] Request Error:", error);
-    return Promise.reject(error);
+// Attach token automatically
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem("session_token");
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
   }
-);
-
-api.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    console.error("[Axios] API Error:", error.response || error);
-    return Promise.reject(error);
-  }
-);
+  return config;
+});
 
 export default api;

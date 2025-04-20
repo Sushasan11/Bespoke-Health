@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
 import homebg from "../../assets/homebg.png";
 
@@ -15,6 +16,10 @@ function HomeHeroSection() {
       section.scrollIntoView({ behavior: "smooth", block: "start" });
     }
   };
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
   return (
     <motion.div

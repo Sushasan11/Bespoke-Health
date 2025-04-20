@@ -20,7 +20,7 @@ export default function PatientDepartment() {
   }, []);
 
   return (
-    <div className="py-10 bg-gray-100">
+    <div className="py-10 mt-8 bg-gray-100">
       <h2 className="text-3xl font-bold text-gray-800 mb-6 text-center">
         Explore Departments
       </h2>

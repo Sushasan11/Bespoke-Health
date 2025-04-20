@@ -3,6 +3,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { ToastContainer, toast } from "react-toastify";
 import { motion } from "framer-motion";
 import api from "../../routes/axios";
+import { generateToken } from "../../context/firebase";
 import "react-toastify/dist/ReactToastify.css";
 
 export default function PatientLogin() {
@@ -17,6 +18,17 @@ export default function PatientLogin() {
     try {
       await api.post("/patient/login", { email, password });
       toast.success("Login successful!");
+
+      // Firebase token generation and submission
+      try {
+        const token = await generateToken();
+        if (token) {
+          await api.post("/patient/token", { token });
+        }
+      } catch (err) {
+        console.error("FCM token error:", err);
+      }
+
       setTimeout(() => navigate("/patient/dashboard"), 2000);
     } catch (error) {
       let errorMsg =

@@ -1,10 +1,21 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { FiMenu, FiX } from "react-icons/fi";
+import { toast } from "react-toastify";
+import { onMessage } from "firebase/messaging";
+import { messaging } from "../../context/firebase";
 
 function HomeNavbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const unsubscribe = onMessage(messaging, (payload) => {
+      toast(payload.notification.body);
+    });
+
+    return () => unsubscribe();
+  }, []);
 
   return (
     <nav className="fixed top-0 left-0 w-full z-50 bg-[#1A1A1A] shadow-md">

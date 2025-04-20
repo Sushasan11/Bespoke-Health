@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 
 // Importing images for the slider
 import slide1 from "../../assets/patientsliding1.jpg";
@@ -32,112 +32,75 @@ export default function PatientSliding() {
     },
   ];
 
-  // State variables for tracking current index and transition direction
-  const [index, setIndex] = useState(0);
-  const [direction, setDirection] = useState(1);
-  const [loaded, setLoaded] = useState(true);
+  // State for the current index of the slide
+  const [currentIndex, setCurrentIndex] = useState(0);
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setLoaded(false); // Hide text before transition
-      const nextIndex = (index + 1) % slides.length;
-
-      // Preload next image before changing slide
-      const img = new Image();
-      img.src = slides[nextIndex].image;
-      img.onload = () => {
-        setIndex(nextIndex);
-        setDirection(1);
-        setLoaded(true);
-      };
-    }, 4000);
+      setCurrentIndex((prevIndex) => (prevIndex + 1) % slides.length);
+    }, 5000);
 
     return () => clearInterval(interval);
-  }, [index]);
+  }, []);
 
-  const handleDotClick = (newIndex) => {
-    if (newIndex !== index) {
-      setLoaded(false);
-      const img = new Image();
-      img.src = slides[newIndex].image;
-      img.onload = () => {
-        setIndex(newIndex);
-        setDirection(newIndex > index ? 1 : -1);
-        setLoaded(true);
-      };
-    }
-  };
-
+  // Fade in and out transition for slides
   const slideVariants = {
-    enter: (direction) => ({
-      x: direction > 0 ? 1000 : -1000,
+    enter: {
       opacity: 0,
-    }),
-    center: {
-      x: 0,
-      opacity: 1,
     },
-    exit: (direction) => ({
-      x: direction > 0 ? -1000 : 1000,
+    center: {
+      opacity: 1,
+      transition: {
+        duration: 4,
+        ease: "easeInOut",
+      },
+    },
+    exit: {
       opacity: 0,
-    }),
+    },
   };
 
   return (
-    /* Slider container with spacing from navbar */
-    <div className="relative w-full mt-24 h-[500px] overflow-hidden rounded-lg">
-      {/* Slide Animation using AnimatePresence */}
-      <AnimatePresence initial={false} custom={direction} mode="wait">
-        <motion.div
-          key={index}
-          custom={direction}
-          variants={slideVariants}
-          initial="enter"
-          animate="center"
-          exit="exit"
-          transition={{
-            duration: 0.8,
-            ease: "easeInOut",
-          }}
-          className="absolute w-full h-full flex items-center justify-center text-white"
-          style={{
-            backgroundImage: `url(${slides[index].image})`,
-            backgroundSize: "cover",
-            backgroundPosition: "center",
-          }}
-        >
-          {/* Frosted Glass Effect for Text */}
-          <motion.div
-            className="bg-white/30 backdrop-blur-md p-6 rounded-lg shadow-lg text-center max-w-lg"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: loaded ? 1 : 0 }}
-            transition={{ duration: 0.5 }}
-          >
-            <h1 className="text-4xl font-bold text-gray-900">
-              {slides[index].title}
-            </h1>
-            <p className="mt-2 text-lg text-gray-800">
-              {slides[index].subtitle}
-            </p>
-            <button className="mt-4 px-6 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition">
-              Learn More
-            </button>
-          </motion.div>
-        </motion.div>
-      </AnimatePresence>
+    <div className="relative w-full mt-15 h-[500px] overflow-hidden rounded-lg">
+      {/* Carousel Container with fading effect */}
+      <motion.div
+        className="absolute w-full h-full flex items-center justify-center text-white"
+        style={{
+          backgroundImage: `url(${slides[currentIndex].image})`,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+        }}
+        initial="enter"
+        animate="center"
+        exit="exit"
+        variants={slideVariants}
+      >
+        {/* Frosted Glass Effect for Text */}
+        <div className="bg-white/30 backdrop-blur-md p-6 rounded-lg shadow-lg text-center max-w-lg">
+          <h1 className="text-4xl font-bold text-gray-900">
+            {slides[currentIndex].title}
+          </h1>
+          <p className="mt-2 text-lg text-gray-800">
+            {slides[currentIndex].subtitle}
+          </p>
+          <button className="mt-4 px-6 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition">
+            Learn More
+          </button>
+        </div>
+      </motion.div>
 
-      {/* Clickable Pagination Dots */}
+      {/* Dots for manual slide navigation */}
       <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 flex space-x-3">
-        {slides.map((_, i) => (
+        {slides.map((_, index) => (
           <button
-            key={i}
-            onClick={() => handleDotClick(i)}
+            key={index}
+            onClick={() => setCurrentIndex(index)}
             className={`w-3 h-3 rounded-full transition cursor-pointer ${
-              i === index
+              index === currentIndex
                 ? "bg-red-500 scale-125"
                 : "bg-gray-400 hover:bg-gray-300"
             }`}
-            aria-label={`Go to slide ${i + 1}`}
+            aria-label={`Go to slide ${index + 1}`}
           />
         ))}
       </div>

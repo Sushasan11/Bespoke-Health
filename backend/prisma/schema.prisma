@@ -1,0 +1,281 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Users {
+  id             Int       @id @default(autoincrement())
+  name           String
+  email          String    @unique
+  password       String
+  role           String    // "Patient" or "Doctor"
+  kyc_status     String    @default("Pending") // "Pending", "Approved", "Rejected"
+  email_verified Boolean   @default(false)
+  otp            String?
+  otp_expires    DateTime?
+  reset_token    String?
+  reset_token_expires DateTime?
+  created_at      DateTime  @default(now())
+  updated_at      DateTime  @default(now())
+  
+  // Relations
+  doctor         Doctor?   // One-to-one relation with Doctor
+  patient        Patient?  // One-to-one relation with Patient
+  kyc            KYC?      // Add this line to define the relation back to KYC
+  notifications Notification[]
+}
+
+model Doctor {
+  id                      Int       @id @default(autoincrement())
+  nmc_number              String    @unique // National Medical Council number
+  speciality              String
+  educational_qualification String
+  years_of_experience     Int
+  former_organisation     String?
+  cv_url                  String?   // URL to stored CV document
+  
+  // Foreign key to Users
+  userId                  Int       @unique
+  user                    Users     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  created_at               DateTime  @default(now())
+  updated_at               DateTime  @updatedAt
+
+  // Add these new relations
+  availabilities   DoctorAvailability[]
+  time_slots       TimeSlot[]
+  consultation_fees ConsultationFee[]
+  appointments     Appointment[]
+}
+
+model KYC {
+  id                Int      @id @default(autoincrement())
+  user_id           Int      @unique
+  
+  // Citizenship documents
+  citizenship_front String   // URL to citizenship front image
+  citizenship_back  String   // URL to citizenship back image
+  
+  // Address information
+  permanent_address String
+  temporary_address String?  // Optional
+  
+  // Status tracking
+  status            String   @default("Pending") @db.VarChar(50) // "Pending", "In-Review", "Approved", "Rejected"
+  review_notes      String?  // Admin notes during review
+  reviewed_by       Int?     // Admin ID who reviewed this KYC
+  reviewed_at       DateTime?
+  
+  created_at        DateTime @default(now())
+  updated_at        DateTime @updatedAt
+  
+  // Relation to user
+  user              Users    @relation(fields: [user_id], references: [id], onDelete: Cascade)
+}
+
+model Patient {
+  id                      Int       @id @default(autoincrement())
+  
+  // Basic patient information
+  phone_number            String?
+  date_of_birth           DateTime?
+  gender                  String?
+  
+  // Appointment tracking
+  last_appointment        DateTime?
+  
+  // Foreign key to Users
+  userId                  Int       @unique
+  user                    Users     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  created_at               DateTime  @default(now())
+  updated_at               DateTime  @updatedAt
+
+  // Add this new relation
+  appointments     Appointment[]
+}
+
+model DoctorAvailability {
+  id           Int      @id @default(autoincrement())
+  doctor       Doctor   @relation(fields: [doctor_id], references: [id])
+  doctor_id    Int
+  day_of_week  Int      // 1 = Monday, 7 = Sunday
+  start_time   DateTime // Start time (only time component matters)
+  end_time     DateTime // End time (only time component matters)
+  is_recurring Boolean  @default(true)
+  created_at   DateTime @default(now())
+  updated_at   DateTime @updatedAt
+
+  @@index([doctor_id])
+}
+
+model TimeSlot {
+  id             Int           @id @default(autoincrement())
+  doctor         Doctor        @relation(fields: [doctor_id], references: [id])
+  doctor_id      Int
+  date           DateTime      // Full date of the slot
+  start_time     DateTime      // Start time of the slot
+  end_time       DateTime      // End time of the slot
+  duration_minutes Int
+  is_available   Boolean       @default(true)
+  created_at     DateTime      @default(now())
+  updated_at     DateTime      @updatedAt
+  appointments   Appointment[]
+
+  @@index([doctor_id, date, is_available])
+}
+
+model ConsultationFee {
+  id               Int      @id @default(autoincrement())
+  doctor           Doctor   @relation(fields: [doctor_id], references: [id])
+  doctor_id        Int
+  consultation_type String  // first_visit, follow_up, emergency
+  amount           Decimal  @db.Decimal(10, 2)
+  currency         String   @default("NPR")
+  created_at       DateTime @default(now())
+  updated_at       DateTime @updatedAt
+
+  @@index([doctor_id])
+}
+
+model Appointment {
+  id                      Int      @id @default(autoincrement())
+  patient                 Patient  @relation(fields: [patient_id], references: [id])
+  patient_id              Int
+  doctor                  Doctor   @relation(fields: [doctor_id], references: [id])
+  doctor_id               Int
+  time_slot               TimeSlot @relation(fields: [time_slot_id], references: [id])
+  time_slot_id            Int @unique
+  status                  String   // pending, confirmed, completed, cancelled, no_show
+  symptoms                String?  @db.Text
+  notes                   String?  @db.Text
+  cancellation_reason     String?
+  follow_up_recommended   Boolean  @default(false)
+  follow_up_appointment_id Int?
+  created_at              DateTime @default(now())
+  updated_at              DateTime @updatedAt
+  payment                 Payment?
+  prescription            Prescription?
+  chat_room               ChatRoom? 
+
+
+  @@index([patient_id])
+  @@index([doctor_id])
+  @@index([time_slot_id])
+}
+
+model Payment {
+  id             Int         @id @default(autoincrement())
+  appointment    Appointment @relation(fields: [appointment_id], references: [id])
+  appointment_id Int         @unique
+  amount         Decimal     @db.Decimal(10, 2)
+  currency       String      @default("NPR")
+  payment_method String
+  transaction_id String?
+  status         String      // pending, completed, failed, refunded
+  refund_amount  Decimal?    @db.Decimal(10, 2)
+  refund_reason  String?
+  metadata       String?     // JSON string to store Khalti-specific data
+  created_at     DateTime    @default(now())
+  updated_at     DateTime    @updatedAt
+
+  @@index([appointment_id])
+  @@index([transaction_id])
+}
+
+model Notification {
+  id         Int      @id @default(autoincrement())
+  user_id    Int
+  message    String   @db.Text
+  type       String   // appointment, payment, system, etc.
+  is_read    Boolean  @default(false)
+  created_at DateTime @default(now())
+  
+  user       Users     @relation(fields: [user_id], references: [id])
+
+  @@index([user_id])
+}
+
+
+model Prescription {
+  id               Int          @id @default(autoincrement())
+  appointment_id   Int          @unique
+  diagnosis        String?      @db.Text
+  doctor_notes     String?      @db.Text
+  follow_up_needed Boolean      @default(false)
+  follow_up_date   DateTime?
+  created_at       DateTime     @default(now())
+  updated_at       DateTime     @updatedAt
+
+  // Relations
+  appointment      Appointment  @relation(fields: [appointment_id], references: [id])
+  medications      Medication[]
+
+  @@index([appointment_id])
+}
+
+model Medication {
+  id               Int          @id @default(autoincrement())
+  prescription_id  Int
+  name             String
+  dosage           String
+  frequency        String
+  duration         String
+  instructions     String?      @db.Text
+  created_at       DateTime     @default(now())
+
+  // Relation
+  prescription     Prescription @relation(fields: [prescription_id], references: [id], onDelete: Cascade)
+
+  @@index([prescription_id])
+}
+
+model Medicine {
+  id                    Int      @id @default(autoincrement())
+  name                  String
+  description           String?  @db.Text
+  manufacturer          String?
+  price                 Float
+  discount_price        Float?
+  category              String?
+  image_url             String?
+  in_stock              Boolean  @default(true)
+  quantity              Int      @default(0) 
+  prescription_required Boolean  @default(false)
+  created_at            DateTime @default(now())
+  updated_at            DateTime @updatedAt
+}
+
+model ChatRoom {
+  id             Int          @id @default(autoincrement())
+  appointment_id Int          @unique
+  appointment    Appointment  @relation(fields: [appointment_id], references: [id])
+  messages       ChatMessage[]
+  created_at     DateTime     @default(now())
+  updated_at     DateTime     @updatedAt
+}
+
+model ChatMessage {
+  id           Int      @id @default(autoincrement())
+  chat_room_id Int
+  chat_room    ChatRoom @relation(fields: [chat_room_id], references: [id])
+  sender_id    Int      // User ID
+  sender_type  String   // "Doctor" or "Patient"
+  content      String   @db.Text
+  attachment   String?  // Optional file path
+  read         Boolean  @default(false)
+  created_at   DateTime @default(now())
+  
+  @@index([chat_room_id])
+  @@index([sender_id])
+}

@@ -88,3 +88,26 @@ Bespoke Health is a comprehensive healthcare platform designed to facilitate int
    ```bash
    npm run dev
    ```
+
+## Environment Variables
+
+To run this project, you will need to add the following environment variables to your .env file in the respective directories.
+
+### Backend (`backend/.env`)
+
+```env
+PORT=3000
+DATABASE_URL="postgresql://postgres:admin@localhost:5432/bespoke_health"
+JWT_SECRET=your_jwt_secret
+EMAIL_USER=your_email@example.com
+EMAIL_PASS=your_email_password
+KHALTI_SECRET=your_khalti_secret
+KHALTI_PUBLIC=your_khalti_public_key
+FRONTEND_URL=http://localhost:5173
+```
+
+### Frontend (`frontend/.env`)
+
+```env
+VITE_API_URL=http://localhost:3000/api
+```
